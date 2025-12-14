@@ -172,9 +172,9 @@
 
 // Some Basic Colors
 // NOTE: Custom raylib color palette for amazing visuals on WHITE background
-#define LIGHTGRAY  CLITERAL(Color){ 200, 200, 200, 255 }   // Light Gray
-#define GRAY       CLITERAL(Color){ 130, 130, 130, 255 }   // Gray
-#define DARKGRAY   CLITERAL(Color){ 80, 80, 80, 255 }      // Dark Gray
+#define LIGHTGRAY  CLITERAL(Color){ 120, 120, 120, 255 }   // Light Gray
+#define GRAY       CLITERAL(Color){ 60, 60, 60, 255 }   // Gray
+#define DARKGRAY   CLITERAL(Color){ 30, 30, 30, 255 }      // Dark Gray
 #define YELLOW     CLITERAL(Color){ 253, 249, 0, 255 }     // Yellow
 #define GOLD       CLITERAL(Color){ 255, 203, 0, 255 }     // Gold
 #define ORANGE     CLITERAL(Color){ 255, 161, 0, 255 }     // Orange

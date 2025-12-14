@@ -1,0 +1,37 @@
+Gameplay: 
+- Rotation speed
+- Drift
+- Line with repeatable texture
+- Projectiles that can follow target
+- You lost screen
+- Game state
+- Highlighting ships
+- Ship Stats UI
+- Gamepad X/Y axis isn't working properly
+- Physics similar collision resolving
+
+Engine:
+- Create collider from prefab
+- Reassign changed animation to editing ship AddEventToEditingAnimation
+- Refactor animation events
+- Refactor input handling
+- Refactor object creation
+- Object initialization from (binary data?) prefabs
+- Asset storing in binary formats
+- Precalculate ui positions only if parent updated
+- UI Flexible Y layout 
+- Polygon collision -- Optimisation
+- Chunk collision detection
+- Bezire animations
+- Collision detection as independent component
+- Animation / animation handling as independent component
+- Split components for separate update
+- Sprite shape detection -- Rectangle detection done; make Polygon
+- Multiplayer
+Done: 
+- Animation events 
+- UI parenting/childrening
+- UI flexible layout (X axis)
+- UI drawing and detecting
+- Ship state control
+- Better ui button click detection - callback now
