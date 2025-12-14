@@ -34,8 +34,9 @@ typedef struct ui_cast_result
 	char flags;
 }ui_cast_result;
 
-inline void remove_ui_element(ui_element_datas* ui_elements, int id);
-inline bool point_over_rect(Vector2 p, Rectangle rect);
+void remove_ui_element(ui_element_datas* ui_elements, int id);
+bool point_over_rect(Vector2 p, Rectangle rect);
+void remove_ui_element_no_replace(ui_element_datas* ui_elements, int id);
 
 static unsigned char ui_flag_active = 1;
 static unsigned char ui_flag_rawRect = 1<<1;
@@ -218,9 +219,11 @@ void process_ui(ui_element_datas* data, float dt, Camera2D cam)
 	calculate_ui_positions(data,cam);
 	draw_ui(data,cam);
 }
-
-inline void remove_ui_element(ui_element_datas* ui_elements, int id)
+// TODO: childrenID are not changing
+void remove_ui_element(ui_element_datas* ui_elements, int id)
 {
+	printf("ERROR: not implemented");
+	return;
 	ui_element* data = ui_elements->data;
 	int firstInactive = ui_elements->firstInactive;
 	data[id] = data[--firstInactive];
@@ -228,8 +231,54 @@ inline void remove_ui_element(ui_element_datas* ui_elements, int id)
 	data[id].id = id;
 	ui_elements->firstInactive = firstInactive;
 }
+// TODO: write the "gaps" in array into the sorted binary tree.
+// then, when creaeting new element pick the lowest id for the element.
+// when removing elements, just write their ids to the tree and make inactive
+int remove_children(ui_element_datas* ui_elements, int id)
+{
+	printf("ERROR: not implemented");
+	return -1;
+	ui_element* data = ui_elements->data;
+	int firstInactive = ui_elements->firstInactive;
+	ui_element parent = data[id];
+	int lastRemoved = -1;
+	for(int i = 0; i < parent.childrenCount; i++)
+	{	
+		int res = remove_children_rm_self(ui_elements, parent.childrenID[i]);
+		if(res != -1 && res > lastRemoved) lastRemoved = res;
+	}
+	parent.childrenCount = 0;
+	// shift elements from lastRemoved + 1 to parent.id + 1;
+	memmove(&data[parent.id + 1], &data[lastRemoved + 1], firstInactive - (lastRemoved + 1));
+	data[parent.id] = parent;
+	return -1;
+}
+int remove_children_rm_self(ui_element_datas* ui_elements, int id)
+{
+	printf("ERROR: not implemented");
+	return -1;
+	ui_element* data = ui_elements->data;
+	int firstInactive = ui_elements->firstInactive;
+	ui_element parent = data[id];
+	int lastRemoved = -1;
+	for(int i = 0; i < parent.childrenCount; i++)
+	{	
+		int res = remove_children(ui_elements, parent.childrenID[i]);
+		if(res != -1 && res > lastRemoved) lastRemoved = res;
+	}
 
-inline bool point_over_rect(Vector2 p, Rectangle rect)
+	remove_ui_element_no_replace(ui_elements, parent.id);
+	
+	return lastRemoved;
+}
+
+void remove_ui_element_no_replace(ui_element_datas* ui_elements, int id)
+{
+	ui_element* data = ui_elements->data;
+	data[id] = (ui_element){0};
+}
+
+bool point_over_rect(Vector2 p, Rectangle rect)
 {
 	return p.x >= rect.x && p.x < rect.x + rect.width && 
 			p.y >= rect.y && p.y < rect.y + rect.height;

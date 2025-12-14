@@ -16,7 +16,7 @@ int InitEditAnimationWindow(FrameAnimation editingAnimation,
 							int* editing_frame_count, int parentID, ui_element_datas* uiDatas);
 
 int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
-							int* editing_frame_count, int existingWindowParent);
+							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas);
 
 Sprite* CreateSprites(Texture2D texture,
 	Vector2 pivot, int width, int height, int* spriteCount);
@@ -100,8 +100,6 @@ int main(){
 	Texture2D space_stars = LoadTexture("resources/Stars.png");
 	Texture2D space_dust = LoadTexture("resources/Dust.png");
 	Texture2D space_nebulae = LoadTexture("resources/Nebulae.png");
-
-
 	
 	Texture2D fighting_ship_Texture = LoadTexture("resources/FighterShip/Fighter_Base.png");
 	Texture2D fighting_ship_ShootTexture = LoadTexture("resources/FighterShip/Fighter_Weapon.png");
@@ -180,7 +178,7 @@ int main(){
 	Vector2 parallaxOffset = {0};
 
 	//ReadFrameAnimation("ship_animation1.anim", &ship.animations[1]);
-
+	char* editingAnimationPath = "ship_animation1.anim";
 	editingAnimation = ship.animations[1];
 	int editing_frame_count = -1;
 
@@ -214,7 +212,13 @@ int main(){
 		}
 		if(IsKeyDown(KEY_TWO))
 		{
-			WriteFrameAnimationToFile(editingAnimation, "ship_animation1.anim");
+			WriteFrameAnimationToFile(editingAnimation, editingAnimationPath);
+		}
+		if(IsKeyDown(KEY_THREE))
+		{
+			ReInitEditAnimationWindowWithNewAnimation(ship.animations[2], 
+							&ship.animations[2].frame_count, 
+							0, &uiDatas);
 		}
 		bool mousePressed = IsMouseButtonPressed(0);
 		if(mousePressed)
@@ -682,48 +686,42 @@ int InitEditAnimationWindow(FrameAnimation editingAnimation,
 	return ui;
 }
 
-/*int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
-							int* editing_frame_count, int existingWindowParent)
+int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
+							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas)
 {
-	// TODO: implement parenting
-	if(existingWindowParent < 0) return;
-	// Create UI background
-	ui_element el = create_ui_element(element,(Sprite){0},DARKGRAY,0,ui_flag_rawRect, 2,0,0);
-	ui_element el1 = create_ui_element(element1,(Sprite){0},GRAY,1,ui_flag_rawRect, layout_flexibleY_in_parent, layout_relative_pos,0);
-	int ui = add_ui_element(&uiDatas,el,-1);
-	int ui1 = add_ui_element(&uiDatas,el1,ui);
-
-	// Construct parent rect1
-
-	ui_element el2 = create_ui_element(element1,(Sprite){0},WHITE,2,ui_flag_rawRect, layout_flexibleX_in_parent, layout_relative_pos,0);
-	el2.rect.height /= 4;
-	el2.rect.width /= 2;
-	int ui_top = add_ui_element(&uiDatas,el2,ui1);
-	//el1.rect.y += el1.rect.height * 2;
-	int ui_mid = add_ui_element(&uiDatas,el2,ui1);
-
-	int startingID =  existingWindowParent + 3; // ADD NUMBER OF UI ELEMENTS HERE
-
-	// Create button for sprites
-	buttonRect = (Rectangle){0,0,48,48};
-	//buttonRect.y += 40;
-	ui_element sprite_button = 
-			create_ui_element(buttonRect, (Sprite){0},LIGHTGRAY,4,ui_flag_button,0,1,0);
-
-	buttonRect = (Rectangle){0,0,8,32};
-	buttonEl = create_ui_element(buttonRect,(Sprite){0},LIGHTGRAY,4,ui_flag_rawRect | ui_flag_button,0,1,AddEventToEditingAnimation);
-	for(int i = 0; i < editingAnimation.frame_count; i++)
+	if(existingWindowParent < 0) return -1;
+	ui_element* data = uiDatas->data;
+	int parentID =  existingWindowParent + 2; // ADD NUMBER OF UI ELEMENTS HERE
+	if(editingAnimation.frame_count < 1 || data[parentID].childrenCount < 1)
 	{
-		int buttonE1 = add_ui_element(&uiDatas,buttonEl,ui_top);
-		printf("id: %d flags: %d n: %d \n",buttonE1,uiDatas.data[buttonE1].flags, uiDatas.data[buttonE1].number_in_children );
-		sprite_button.sprite = editingAnimation.sprites[i];
-		int button_sprite = add_ui_element(&uiDatas,sprite_button,ui_mid);
+		printf("!(editingAnimation.frame_count < 1 || data[parentID].childrenCount). create window again");
+		return -1;
 	}
 
-	int editing_frame_count = editingAnimation.frame_count;
+	for(int i = 0; i < editingAnimation.frame_count; i++)
+	{
+		int buttonID = -1;
+		// TODO: remove out of loop; check lengths
+		if(data[parentID].childrenCount <= i)
+		{
+			int copy_id = data[parentID].childrenID[0];
+			ui_element copy = data[copy_id];
+			buttonID = add_ui_element(uiDatas, copy, parentID);
+		}else buttonID = data[parentID].childrenID[i];
+		if(data[parentID + 1].childrenCount <= i)
+		{
+			int copy_id = data[parentID + 1].childrenID[0];
+			ui_element copy = data[copy_id];
+			copy.sprite = editingAnimation.sprites[i];
+			int button_sprite = add_ui_element(uiDatas, copy, parentID + 1);
+		}
+		printf("id: %d flags: %d n: %d \n",buttonID,data[buttonID].flags, data[buttonID].number_in_children );
+	}
 
-	return ui;
-}*/
+	//*editing_frame_count = editingAnimation.frame_count;
+
+	return existingWindowParent;
+}
 
 
 
