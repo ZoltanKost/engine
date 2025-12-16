@@ -212,13 +212,17 @@ int main(){
 		}
 		if(IsKeyDown(KEY_TWO))
 		{
-			WriteFrameAnimationToFile(editingAnimation, editingAnimationPath);
+			//WriteFrameAnimationToFile(editingAnimation, editingAnimationPath);
 		}
 		if(IsKeyDown(KEY_THREE))
 		{
-			ReInitEditAnimationWindowWithNewAnimation(ship.animations[2], 
-							&ship.animations[2].frame_count, 
-							0, &uiDatas);
+			editingAnimation = ship.animations[2];
+			ReInitEditAnimationWindowWithNewAnimation(editingAnimation, 
+							&editing_frame_count, 0, &uiDatas);
+		}
+		if(IsKeyDown(KEY_FOUR))
+		{
+			datas.data[playerShip].state = ship_state_destroy;
 		}
 		bool mousePressed = IsMouseButtonPressed(0);
 		if(mousePressed)
@@ -231,37 +235,13 @@ int main(){
 				{
 					uiDatas.data[uiInput.id].callback(number_in_children - 1);
 				}
+				printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames, (int)datas.data[0].animations[2].frames, (int)datas.data[1].animations[2].frames);
+				printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames[number_in_children - 1].event, (int)datas.data[0].animations[2].frames[number_in_children - 1].event, (int)datas.data[1].animations[2].frames[number_in_children - 1].event);
 				//ship.animations[1] = editingAnimation;
-				datas.data[0].animations[1] = editingAnimation;
+				//datas.data[0].animations[1] = editingAnimation;
 				//WriteFrameAnimationToFile(editingAnimation, "shoot_animation.anim");
 			}
 		}
-
-		// TODO: RESIZE ANIMATION
-
-		/*if(editingAnimation.frame_count > editing_frame_count)
-		{
-			editing_frame_count = editingAnimation.frame_count;
-			int buttonE1 = add_ui_element(&uiDatas,buttonEl,ui_top);
-						//if(editingAnimation.frame_count < editingAnimation.sprite_count)
-			//sprite_button.sprite = (Sprite){0};
-			int button_sprite = add_ui_element(&uiDatas,sprite_button,ui_mid);
-		}*/
-		/*switch (uiInput.id)
-		{
-			case (-1):
-				//CloseWindow();
-				//No ui element under the mouse
-				break;
-			case (2):
-				editingAnimation.frames = MemRealloc(editingAnimation.frames, sizeof(Frame) * ++editingAnimation.frame_count);
-				editingAnimation.frames[editingAnimation.frame_count] = (Frame){0};
-				int button = add_ui_element(&uiDatas,buttonEl,ui1);
-				//CloseWindow();
-				break;
-			default:
-				mousePressed = false;
-		}*/
 		//Vector2 gamepad_input = {0};
 		bool moving = false;
 		/*if(IsGamepadAvailable(0))
@@ -689,12 +669,13 @@ int InitEditAnimationWindow(FrameAnimation editingAnimation,
 int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
 							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas)
 {
+	printf("Start reinitting frames: %d\n", editingAnimation.frame_count);
 	if(existingWindowParent < 0) return -1;
 	ui_element* data = uiDatas->data;
 	int parentID =  existingWindowParent + 2; // ADD NUMBER OF UI ELEMENTS HERE
 	if(editingAnimation.frame_count < 1 || data[parentID].childrenCount < 1)
 	{
-		printf("!(editingAnimation.frame_count < 1 || data[parentID].childrenCount). create window again");
+		printf("!(editingAnimation.frame_count < 1 || data[parentID].childrenCount). create window again\n");
 		return -1;
 	}
 
@@ -704,21 +685,26 @@ int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation,
 		// TODO: remove out of loop; check lengths
 		if(data[parentID].childrenCount <= i)
 		{
+			printf("Not enough ui elements (bt), resizing\n");
 			int copy_id = data[parentID].childrenID[0];
+			printf("copy id: %d\n", copy_id);
 			ui_element copy = data[copy_id];
 			buttonID = add_ui_element(uiDatas, copy, parentID);
+			printf("resized\n");
 		}else buttonID = data[parentID].childrenID[i];
-		if(data[parentID + 1].childrenCount <= i)
+		/*if(data[parentID + 1].childrenCount <= i)
 		{
+			printf("Not enough ui elements (sprites), resizing. childrenCount: %d capacity: %d \n", data[parentID + 1].childrenCount, data[parentID + 1].childrenCapacity);
 			int copy_id = data[parentID + 1].childrenID[0];
 			ui_element copy = data[copy_id];
 			copy.sprite = editingAnimation.sprites[i];
-			int button_sprite = add_ui_element(uiDatas, copy, parentID + 1);
-		}
-		printf("id: %d flags: %d n: %d \n",buttonID,data[buttonID].flags, data[buttonID].number_in_children );
+			//int button_sprite = add_ui_element(uiDatas, copy, parentID + 1);
+			printf("resized\n");
+		}*/
+		printf("reassigned: id: %d flags: %d n: %d \n",buttonID,data[buttonID].flags, data[buttonID].number_in_children );
 	}
 
-	//*editing_frame_count = editingAnimation.frame_count;
+	*editing_frame_count = editingAnimation.frame_count;
 
 	return existingWindowParent;
 }

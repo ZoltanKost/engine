@@ -229,11 +229,10 @@ void ProcessBulletCollisions(BulletDatas* bulletData, ShipDatas* shipData, int s
                 (Vector2){-0.5f * bullet.sprite.rect.width, -0.5f * bullet.sprite.rect.height},
                 (Vector2){-0.5f * ship.sprite.rect.width, -0.5f * ship.sprite.rect.height}))
             {
-                ships[s].flags = ships[s].flags & (~ship_flag_active);
+                ships[s].state = ship_state_destroy;
                 // TODO: state control
                 ships[s].animData = (CurrentAnimationData){0};
                 ships[s].animData.current_animation = 2; 
-                ships[s].animData.current_frame = 0;
                 bullet.flags = bullet.flags & (~bullet_active);
                 printf("\n hit! bullet %d -> ship %d", i, s);
             }

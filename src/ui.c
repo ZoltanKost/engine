@@ -65,7 +65,7 @@ int add_ui_element(ui_element_datas* data, ui_element element, int parentID)
 	int result_id = data->firstInactive++;
 	element.id = result_id;
 	ui_elements[result_id] = element;
-	printf("added el %d, flags: %d parent: %d \n", result_id, element.layout_flags, parentID);
+	printf("added el %d, flags: %d parent: %d \n", result_id, element.flags, parentID);
 
 	// Then, assigned element from the array to the parents children
 	if(parentID > -1)
@@ -76,20 +76,22 @@ int add_ui_element(ui_element_datas* data, ui_element element, int parentID)
 			parent.childrenID[parent.childrenCount] = result_id;
 			ui_elements[parentID].childrenCount++;
 		}else{
+			printf("reallocating: %d %d %d \n", parentID, ui_elements[parentID].childrenCount, ui_elements[parentID].childrenCapacity);
 			ui_elements[parentID].childrenID = 
 				MemRealloc(ui_elements[parentID].childrenID, 
-					parent.childrenCapacity*2*(sizeof(int*)));
+					parent.childrenCapacity*2*(sizeof(int)));
+			printf("reallocating\n");
 			ui_elements[parentID].childrenCapacity*=2;
 			ui_elements[parentID].childrenID[ui_elements[parentID].childrenCount++] = result_id;
 		}
-
+		printf("child assigned\n");
 		ui_elements[result_id].parentID = parentID;
 		ui_elements[result_id].layout_flags |= parent.children_layout;
 		// TODO: should update ALL numbers in ALL children.  
 		ui_elements[result_id].number_in_children = ui_elements[parentID].childrenCount;
 		//printf("added child %d %d \n", ui_elements[result_id].layout_flags, ui_elements[result_id].number_in_children);
 	}
-	printf("\n%d",data->firstInactive);
+	printf("\nfirst: %d count: %d \n",data->firstInactive, data->count);
 	return result_id;
 }
 

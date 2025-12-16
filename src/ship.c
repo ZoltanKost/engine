@@ -1,3 +1,4 @@
+// TODO: Do not spawn whole animation data.  reference the assets loaded in memory
 typedef struct Bullet
 {
     Sprite sprite;
@@ -45,8 +46,8 @@ typedef struct Ship
     Vector2 position; // 8 
     Vector2 moveDirection; // 8
     char team; // 1
-    char flags;// 1 
-    char state;// 1
+    unsigned char flags;// 1 
+    unsigned char state;// 1
 } Ship;
 
 typedef struct ShipDatas
@@ -87,6 +88,7 @@ void ProcessAnimation(ShipDatas* data, float dt, int scaleFactor);
 #define ship_flag_active 	 1
 #define ship_flag_move 		 1 << 1
 #define ship_flag_shoot 	 1 << 2
+#define ship_flag_destroy 	 1 << 3
 #define ship_flag_reset 	 1 << 6
 #define ship_flag_remove 	 1 << 7
 
@@ -190,7 +192,8 @@ void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas)
 	for(int i = 0; i < shipData->firstInactiveShip; i++)
 	{
 		Ship ship = data[i];
-		if(!(ship.flags & ship_flag_active)) continue;
+		printf("id: %d state: %d\n", ship.id, ship.state);
+		//if(!(ship.flags & ship_flag_active)) continue;
 		if(ship.flags & ship_flag_reset) 
 		{
 			printf("resetted state %d state: %d \n", ship.id, ship.state);
@@ -200,10 +203,10 @@ void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas)
 		switch(ship.state)
 		{
 			case (ship_state_shooting):
-				printf("%d state: %d \n", ship.id, ship.state);
+				//printf("%d state: %d \n", ship.id, ship.state);
 				if(ship.animData.current_animation != 1)
 				{
-					printf("anim: %d \n", ship.animData.current_animation);
+					//printf("anim: %d \n", ship.animData.current_animation);
 					ship.animData = (CurrentAnimationData){0};
 					ship.animData.current_animation = 1;
 					break;
@@ -217,8 +220,10 @@ void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas)
 
 				break;
 			case(ship_state_destroy):
+				printf("destroy state\n");
 				if(ship.animData.current_animation != 2)
 				{
+					printf("Setting anim data to current_animation = 1");
 					ship.animData = (CurrentAnimationData){0};
 					ship.animData.current_animation = 2;
 				}
@@ -289,7 +294,7 @@ void ProcessAnimation(ShipDatas* data, float dt, int scaleFactor)
 			&& (animData.current_frame < currentAnim.frame_count))
 		{
 			ship.flags = ship.flags | currentAnim.frames[animData.current_frame].event;
-			if(ship.id == 0) printf("anim: %d frame %d sets flags: %d\n", current_anim, current_frame, currentAnim.frames[animData.current_frame].event);
+			//if(ship.id == 0) printf("anim: %d frame %d sets flags: %d\n", current_anim, current_frame, currentAnim.frames[animData.current_frame].event);
 			int sprite_id = currentAnim.frames[animData.current_frame++].sprite_id;
 			ship.sprite = currentAnim.sprites[sprite_id];
 		}
@@ -398,7 +403,7 @@ void ProcessCollisions(ShipDatas* datas, float scaleFactor)
 				{
 					if(ships[l].team != 0) 
 						{
-							ships[l].flags = ships[l].flags & (~ship_flag_active);
+							ships[l].state = ship_state_destroy;
 							ships[l].animData = (CurrentAnimationData){0};
 							ships[l].animData.current_animation = 2;
 						}
