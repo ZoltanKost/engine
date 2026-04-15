@@ -10,8 +10,6 @@
 static Vector2 up = {0,-1};
 static Vector2 vector2_zero = {0,0};
 
-
-
 int InitEditAnimationWindow(FrameAnimation editingAnimation, 
 							int* editing_frame_count, int parentID, ui_element_datas* uiDatas);
 
@@ -86,7 +84,7 @@ int main(){
 	int unitsInHeight = SCREEN_HEIGHT / 9;
 	float scaleFactorX = 2.0f;//(float)SCREEN_WIDTH / width;
 	float scaleFactorY = 2.0f;//(float)SCREEN_HEIGHT / height;
-	SetTargetFPS(60);
+	SetTargetFPS(1000);
 	Color bgColor = {18,18,18,255};
 
 	Color green = {18,255,18,255};
@@ -190,6 +188,7 @@ int main(){
 	{
 		BeginMode2D(camera);
 		ClearBackground(bgColor);
+
 		
 		float dt = GetFrameTime();
 		//printf("\n %.5f", dt);
@@ -332,6 +331,7 @@ int main(){
 		ProcessShips(&datas, &bulletDatas,dt, scaleFactorX);
 		ProcessBullets(&bulletDatas,&datas, dt, scaleFactorX);
 		process_ui(&uiDatas,dt,camera);
+		DrawFPS(camera.target.x - SCREEN_WIDTH/ 2+ 50, camera.target.y -  SCREEN_HEIGHT/ 2+ 50);
 
 		camera.target = datas.data[playerShip].position;
 
@@ -708,6 +708,5 @@ int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation,
 
 	return existingWindowParent;
 }
-
 
 

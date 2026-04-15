@@ -11,6 +11,7 @@ Gameplay:
 - Physics similar collision resolving
 
 Engine:
+- Translation Unit architecture
 - Create collider from prefab
 - Reassign changed animation to editing ship AddEventToEditingAnimation
 - Refactor animation events
