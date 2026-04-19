@@ -1,40 +1,5 @@
-typedef struct Sprite // 42 byte;
-{
-	Texture2D texture; // 20 TODO: can be moved out to some texture_sprites struct
-	Rectangle rect; // 16
-	Vector2 pivot; // 8
-} Sprite;
+#include "animation.h"
 
-typedef struct Animation
-{
-	Sprite* sprites; // 8
-	int length; // 4
-	float frameDuration; // 4
-} Animation;
-
-typedef struct Frame
-{
-	float time; // 4b
-	Vector2 position; // 8b
-	int sprite_id; // 4 byte
-	float rotation; // 4 byte
-	char event; // 1 byte
-} Frame;
-
-typedef struct FrameAnimation // 36 byte 40 byte
-{
-	Frame* frames; // 8
-	Sprite* sprites; // 8
-	int frame_count; // 4
-	float duration; // 4
-} FrameAnimation;
-
-typedef struct CurrentAnimationData
-{
-	int current_frame; 
-	int current_animation;
-	float time;
-} CurrentAnimationData;
 
 bool WriteFrameAnimationToFile(FrameAnimation animation, char* animationName)
 {
@@ -87,4 +52,40 @@ bool ReadFrameAnimation(char* filename, FrameAnimation* animation)
 
 	fclose(file_ptr);
 	return 1;
+}
+
+FrameAnimation CreateFrameAnimationFromTexture(Texture2D texture,
+			float anim_duration, Vector2 spritePivot,
+			int spriteWidth, int spriteHeight)
+{
+	FrameAnimation result;
+
+	Sprite* sprites = CreateSprites(texture, spritePivot,
+						spriteWidth, spriteHeight, &result.frame_count);
+	result.sprites = sprites;
+	result.duration = anim_duration;
+	result.frames = MemAlloc(result.frame_count*sizeof(Frame)); // 8
+	for(int i = 0; i < result.frame_count; i++)
+	{
+		result.frames[i] = (Frame){
+			.time = result.duration * i / result.frame_count,
+			.position = (Vector2){0},
+			.sprite_id = i,
+			.rotation = 0,
+		};
+	}
+	return result;
+}
+
+
+Animation CreateAnimation(Texture2D texture,
+			float frameDuration, Vector2 spritePivot,
+			int spriteWidth, int spriteHeight)
+{
+	Animation result;
+	result.frameDuration = frameDuration;
+	Sprite* sprites = CreateSprites(texture, spritePivot,
+						spriteWidth, spriteHeight, &result.length);
+	result.sprites = sprites;
+	return result;
 }

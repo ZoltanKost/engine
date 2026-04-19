@@ -11,14 +11,15 @@ Gameplay:
 - Physics similar collision resolving
 
 Engine:
-- Translation Unit architecture
+- drawing module
+- refactor engine.c
 - Create collider from prefab
 - Reassign changed animation to editing ship AddEventToEditingAnimation
 - Refactor animation events
 - Refactor input handling
 - Refactor object creation
-- Object initialization from (binary data?) prefabs
 - Asset storing in binary formats
+- Object initialization from (binary data?) prefabs
 - Precalculate ui positions only if parent updated
 - UI Flexible Y layout 
 - Polygon collision -- Optimisation
@@ -30,6 +31,7 @@ Engine:
 - Sprite shape detection -- Rectangle detection done; make Polygon
 - Multiplayer
 Done: 
+- Translation Unit architecture
 - Animation events 
 - UI parenting/childrening
 - UI flexible layout (X axis)

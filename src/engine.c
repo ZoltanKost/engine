@@ -1,76 +1,4 @@
-#include <raylib.h>
-#include <raymath.h>
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-#include "animation.c"
-#include "ui.c"
-
-
-static Vector2 up = {0,-1};
-static Vector2 vector2_zero = {0,0};
-
-int InitEditAnimationWindow(FrameAnimation editingAnimation, 
-							int* editing_frame_count, int parentID, ui_element_datas* uiDatas);
-
-int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
-							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas);
-
-Sprite* CreateSprites(Texture2D texture,
-	Vector2 pivot, int width, int height, int* spriteCount);
-
-Sprite CreateSprite(Texture2D texture,
-	Vector2 pivot);
-
-void DrawSpriteRotated(Sprite spriteData, 
-		Vector2 position, 
-		float rotationEuler,int scaleFactorX);
-
-void DrawBackgroundParallax(Camera2D camera, Vector2 speed, int width, int height,
-	int unitsInWidth, int unitsInHeight, 
-	Texture2D texture1,Texture2D texture2,Texture2D texture3);
-/*
-Animation* CreateAnimations(Texture2D* textures,
-			float* frameDurations, Vector2 spritePivot,
-			int *spriteWidth, int *spriteHeight, int length);*/
-
-Animation CreateAnimation(Texture2D texture,
-			float frameDuration, Vector2 spritePivot,
-			int spriteWidth, int spriteHeight);
-
-FrameAnimation CreateFrameAnimationFromTexture(Texture2D texture,
-			float anim_duration, Vector2 spritePivot,
-			int spriteWidth, int spriteHeight);
-
-void DetectRectangle(Image image);
-
-Rectangle DetectCollisionRectangle(Image image,int xMax, int yMax);
-
-
-bool CheckCollisionRectRotated(Rectangle r1, Rectangle r2, 
-							float rot1, float rot2,float scaleFactor, Vector2 pixel_offset1, Vector2 pixel_offset2);
-
-void AddFrameToEditingAnimation(int paramCount);
-
-void AddEventToEditingAnimation(int frameNumber);
-
-static float starsSpeedMultiplier = 12.0f;
-static float dustSpeedMultiplier = 24.0f;
-static float nebulaeSpeedMultiplier = 18.0f;
-static float shipSpeed = 400.0f;
-static int team_neutral = 0;
-static Texture2D nullTexture = {
-	.id = -1
-};
-static FrameAnimation editingAnimation = {0};
-static char current_event_animation_flag = 1 << 6;
-
-#include "ship.c"
-//#include "bullet.c"
-
-#define SCREEN_WIDTH 1368
-#define SCREEN_HEIGHT 720 
-
+#include "engine.h"
 
 int main(){
 
@@ -234,8 +162,8 @@ int main(){
 				{
 					uiDatas.data[uiInput.id].callback(number_in_children - 1);
 				}
-				printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames, (int)datas.data[0].animations[2].frames, (int)datas.data[1].animations[2].frames);
-				printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames[number_in_children - 1].event, (int)datas.data[0].animations[2].frames[number_in_children - 1].event, (int)datas.data[1].animations[2].frames[number_in_children - 1].event);
+				//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames, (int)datas.data[0].animations[2].frames, (int)datas.data[1].animations[2].frames);
+				//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames[number_in_children - 1].event, (int)datas.data[0].animations[2].frames[number_in_children - 1].event, (int)datas.data[1].animations[2].frames[number_in_children - 1].event);
 				//ship.animations[1] = editingAnimation;
 				//datas.data[0].animations[1] = editingAnimation;
 				//WriteFrameAnimationToFile(editingAnimation, "shoot_animation.anim");
@@ -329,7 +257,7 @@ int main(){
 		}
 
 		ProcessShips(&datas, &bulletDatas,dt, scaleFactorX);
-		ProcessBullets(&bulletDatas,&datas, dt, scaleFactorX);
+		ProcessBullets(&bulletDatas, dt, scaleFactorX);
 		process_ui(&uiDatas,dt,camera);
 		DrawFPS(camera.target.x - SCREEN_WIDTH/ 2+ 50, camera.target.y -  SCREEN_HEIGHT/ 2+ 50);
 
@@ -355,18 +283,7 @@ void DrawSpriteRotated(Sprite sprite,
 		//printf("%f %f", sprite.pivot.x, sprite.pivot.y);
 }
 
-Sprite CreateSprite(Texture2D texture,
-			Vector2 pivot)
-{
-	Sprite res = {0};
-	res.texture = texture;
-	Rectangle rect = {0,0,texture.width,texture.height};
-	res.rect = rect;
-	pivot.x *= texture.width;
-	pivot.y *= texture.height;
-	res.pivot = pivot;
-	return res;
-}
+
 
 void DrawBackgroundParallax(Camera2D camera, Vector2 speed, int width, int height,
 	int unitsInWidth, int unitsInHeight,
@@ -415,92 +332,6 @@ void AddEventToEditingAnimation(int frameNumber)
 	printf("for frame %d added event %d \n",frameNumber,ship_flag_reset);
 }
 
-Sprite* CreateSprites(Texture2D texture,
-	Vector2 pivot, int width, int height, int* sCount)
-{
-	int spriteCount = (texture.width / width) * (texture.height / height);
-	*sCount = spriteCount;
-	int spriteSize = sizeof(Sprite);
-	pivot.x *= width;
-	pivot.y *= height;
-	int x = 0; int y = 0;
-	Sprite* result = MemAlloc(spriteCount * spriteSize);
-	for(int i = 0; i < spriteCount; i++)
-	{
-		Sprite res = {0};
-		res.texture = texture;
-		Rectangle rect = {x,y,width,height};
-		res.rect = rect;
-		res.pivot = pivot;
-		//printf("%d %d %d \n", &result[i], x,y);
-		result[i] = res;
-		x += width;
-		if(x > texture.width)
-		{
-			x = 0; 
-			y += height;
-		}
-	}
-	return result;
-}
-
-FrameAnimation CreateFrameAnimationFromTexture(Texture2D texture,
-			float anim_duration, Vector2 spritePivot,
-			int spriteWidth, int spriteHeight)
-{
-	FrameAnimation result;
-
-	Sprite* sprites = CreateSprites(texture, spritePivot,
-						spriteWidth, spriteHeight, &result.frame_count);
-	result.sprites = sprites;
-	result.duration = anim_duration;
-	result.frames = MemAlloc(result.frame_count*sizeof(Frame)); // 8
-	for(int i = 0; i < result.frame_count; i++)
-	{
-		result.frames[i] = (Frame){
-			.time = result.duration * i / result.frame_count,
-			.position = (Vector2){0},
-			.sprite_id = i,
-			.rotation = 0,
-		};
-	}
-	return result;
-}
-
-Animation CreateAnimation(Texture2D texture,
-			float frameDuration, Vector2 spritePivot,
-			int spriteWidth, int spriteHeight)
-{
-	Animation result;
-	result.frameDuration = frameDuration;
-	Sprite* sprites = CreateSprites(texture, spritePivot,
-						spriteWidth, spriteHeight, &result.length);
-	result.sprites = sprites;
-	return result;
-}
-
-Rectangle DetectCollisionRectangle(Image image, int xMax, int yMax)
-{
-	int minX = xMax; int minY = yMax; 
-	int maxX = 0; int maxY = 0;
-	for(int y = 0; y < yMax; y++)
-	{
-		int yOffset = y * image.height;
-		for(int x = 0; x < xMax; x++)
-		{
-			Color color = GetImageColor(image,x,y);
-			if(color.a) 
-			{
-				if(x < minX) minX = x;
-				if(y < minY) minY = y; 
-				if(x > maxX) maxX = x; 
-				if(y > maxY) maxY = y; 
-			}
-		}
-	}
-	printf("\n %d, %d, %d, %d", minX, minY, maxX - minX,maxY - minY);
-	return (Rectangle) {.x = minX, .y = minY, .width = maxX - minX, .height = maxY - minY};
-}
 
 void DetectRectangle(Image image)
 {

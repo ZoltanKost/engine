@@ -1,102 +1,4 @@
-// TODO: Do not spawn whole animation data.  reference the assets loaded in memory
-typedef struct Bullet
-{
-    Sprite sprite;
-    Rectangle collider;
-    FrameAnimation* animations;
-    CurrentAnimationData animData;
-    Vector2 moveDirection;
-    Vector2 position;
-    float rotation;
-    float moveSpeed;
-    float lifeTime;
-    float time;
-    int id;
-    char team;
-    char flags;
-} Bullet;
-
-typedef struct BulletDatas
-{
-    Bullet* data;
-    int count;
-    int firstInactive;
-} BulletDatas;
-
-
-typedef struct Engine //88 byte
-{
-    FrameAnimation animation; // 40
-    Sprite sprite; // 44 
-    int current_frame; // 4
-    float time; // 4
-} Engine;
-typedef struct Ship
-{
-	Engine engine; // 88 byte
-	Bullet bulletToSpawn;
-	Rectangle collider; // 16 byte
-    Sprite sprite; // 44 byte
-    CurrentAnimationData animData; // 12 -- 3 x 4 byte
-    int id; // 4
-    int animationCount; // 4
-    float moveSpeed; // 4
-    float rotation; // 4
-    FrameAnimation* animations; // 8 byte
-    Vector2 position; // 8 
-    Vector2 moveDirection; // 8
-    char team; // 1
-    unsigned char flags;// 1 
-    unsigned char state;// 1
-} Ship;
-
-typedef struct ShipDatas
-{
-    Ship* data;
-    int count;
-    int firstInactiveShip;
-} ShipDatas;
-
-ShipDatas InitShips(int initCount);
-
-void ProcessShips(ShipDatas* shipData, BulletDatas* bulletData, float dt,int scaleFactor);
-
-void ProcessEngine(Vector2 position, float rotation, Engine* engin, float dt, int scaleFactor);
-
-Ship CreateShipLoadAnimations(char* base_texture_path,
-								char* shoot_texture_path,
-								char* destruction_texture_path,
-								char* engine_texture_path,
-								char* bullet_texture_path, 
-								char* base_animation_path,
-								char* shooting_animation_path,
-								char* destruction_animation_path,
-								int bulletFrameCount, 
-								float bulletSpeed, 
-								float bulletLifeTime,
-				 				float speed, int team);
-
-
-void RemoveShip(ShipDatas* ships, int id);
-void RemoveUnactiveShips(ShipDatas* shipData);
-void ProcessRotation(ShipDatas* shipData, float dt);
-void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas);
-void ProcessMovement(ShipDatas* shipData, float dt, float scaleFactor);
-void ProcessCollisions(ShipDatas* datas, float scaleFactor);
-void ProcessAnimation(ShipDatas* data, float dt, int scaleFactor);
-
-#define ship_flag_active 	 1
-#define ship_flag_move 		 1 << 1
-#define ship_flag_shoot 	 1 << 2
-#define ship_flag_destroy 	 1 << 3
-#define ship_flag_reset 	 1 << 6
-#define ship_flag_remove 	 1 << 7
-
-#define ship_state_idle      0
-#define ship_state_shooting  1
-#define ship_state_destroy 	 1 << 7
-
-#include "bullet.c"
+#include "ship.h"
 
 ShipDatas InitShips(int initCount)
 {
@@ -332,7 +234,7 @@ void ProcessRotation(ShipDatas* shipData, float dt)
 	for(int i = 0; i < firstInactive; i++)
 	{
 		Ship ship = ships[i];
-		ship.rotation = Vector2Angle(up,ship.moveDirection);
+		ship.rotation = Vector2Angle(vector2_up,ship.moveDirection);
 		ship.rotation = (int)(ship.rotation * RAD2DEG) % 360;
 		if(ship.rotation < 0) ship.rotation += 360;
 		ships[i] = ship;
@@ -478,4 +380,55 @@ Ship CreateShipLoadAnimations(char* base_texture_path,
 	}
 
 	return ship;
+}
+
+// ---------------------------------------------------------------
+// Component: ProcessBulletCollisions
+// ---------------------------------------------------------------
+void ProcessBulletCollisions(BulletDatas* bulletData, ShipDatas* shipData, int scaleFactor)
+{
+    Bullet* bullets = bulletData->data;
+    int bulletCount = bulletData->firstInactive;
+    int shipCount = shipData->firstInactiveShip;
+    Ship* ships = shipData->data;
+
+    for (int i = 0; i < bulletCount; i++)
+    {
+        Bullet bullet = bullets[i];
+        if (!(bullet.flags & bullet_active)) continue;
+
+        for (int s = 0; s < shipCount; s++)
+        {
+            Ship ship = ships[s];
+            if (bullet.team == ship.team || ~ship.flags & ship_flag_active) continue;
+
+            Rectangle rec1 = bullet.sprite.rect;
+            rec1.x = bullet.collider.x + bullet.position.x;
+            rec1.y = bullet.collider.y + bullet.position.y;
+            rec1.width = bullet.collider.width;
+            rec1.height = bullet.collider.height;
+
+            Rectangle rec2 = ship.sprite.rect;
+            rec2.x = ship.collider.x + ship.position.x;
+            rec2.y = ship.collider.y + ship.position.y;
+            rec2.width = ship.collider.width;
+            rec2.height = ship.collider.height;
+
+            if (CheckCollisionRectRotated(
+                rec1, rec2,
+                bullet.rotation, ship.rotation,
+                scaleFactor,
+                (Vector2){-0.5f * bullet.sprite.rect.width, -0.5f * bullet.sprite.rect.height},
+                (Vector2){-0.5f * ship.sprite.rect.width, -0.5f * ship.sprite.rect.height}))
+            {
+                ships[s].state = ship_state_destroy;
+                // TODO: state control
+                ships[s].animData = (CurrentAnimationData){0};
+                ships[s].animData.current_animation = 2; 
+                bullet.flags = bullet.flags & (~bullet_active);
+                printf("\n hit! bullet %d -> ship %d", i, s);
+            }
+        }
+        bullets[i] = bullet;
+    }
 }

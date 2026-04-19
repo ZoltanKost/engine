@@ -1,47 +1,4 @@
-typedef struct ui_element
-{
-	int parentID;
-	int* childrenID;
-	int number_in_children;
-	int childrenCount;
-	int childrenCapacity;
-	Rectangle rect;
-	Rectangle draw_rect; 
-	Color color;
-	Sprite sprite;
-	void (*callback)(int);
-	int layer;
-	char children_layout;
-	char layout_flags;
-	char flags;
-	int id;
-}ui_element;
-
-char layout_relative_pos = 1;
-char layout_flexibleX_in_parent = 2; 
-char layout_flexibleY_in_parent = 4;
-
-typedef struct ui_element_datas
-{
-	ui_element* data;
-	int count;
-	int firstInactive;
-}ui_element_datas;
-
-typedef struct ui_cast_result
-{
-	int id;
-	char flags;
-}ui_cast_result;
-
-void remove_ui_element(ui_element_datas* ui_elements, int id);
-bool point_over_rect(Vector2 p, Rectangle rect);
-void remove_ui_element_no_replace(ui_element_datas* ui_elements, int id);
-
-static unsigned char ui_flag_active = 1;
-static unsigned char ui_flag_rawRect = 1<<1;
-static unsigned char ui_flag_button = 1<<7;
-static Color uiColor = {0x36,0x36,0x36,0xFF};
+#include "ui.h"
 
 ui_element_datas init_ui(int initCount)
 {

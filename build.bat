@@ -2,6 +2,6 @@
 cd w:/Engine/
 mkdir builds
 pushd builds
-cl -Zi ..\src\*.c ..\src\lib\raylibdll.lib /I ..\src\include
+cl -Zi ..\src\*.c ..\src\lib\raylibdll.lib /I ..\src\include /I ..\src\header
 popd
 
