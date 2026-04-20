@@ -17,4 +17,8 @@ Sprite* CreateSprites(Texture2D texture,
 Sprite CreateSprite(Texture2D texture,
 	Vector2 pivot);
 
+void DrawSpriteRotated(Sprite sprite, 
+		Vector2 position, 
+		float rotationEuler, int scaleFactorX);
+
 #endif

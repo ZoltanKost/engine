@@ -84,6 +84,7 @@ void ProcessShips(ShipDatas* shipData, BulletDatas* bulletData, float dt,int sca
 	ProcessMovement(shipData, dt,scaleFactor);
 	ProcessRotation(shipData, dt);
 	ProcessCollisions(shipData, scaleFactor);
+	ProcessBulletCollisions(bulletData,shipData,scaleFactor);
 	ProcessAnimation(shipData, dt,scaleFactor);
 }
 
@@ -94,7 +95,7 @@ void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas)
 	for(int i = 0; i < shipData->firstInactiveShip; i++)
 	{
 		Ship ship = data[i];
-		printf("id: %d state: %d\n", ship.id, ship.state);
+		//printf("id: %d state: %d\n", ship.id, ship.state);
 		//if(!(ship.flags & ship_flag_active)) continue;
 		if(ship.flags & ship_flag_reset) 
 		{
@@ -202,6 +203,7 @@ void ProcessAnimation(ShipDatas* data, float dt, int scaleFactor)
 		}
 
 		ship.animData = animData;
+		//if(i == 0) printf("animrot: %.5f", ship.rotation);
 		DrawSpriteRotated(ship.sprite,
 			ship.position,ship.rotation,scaleFactor);
 		ships[i] = ship;
@@ -233,11 +235,10 @@ void ProcessRotation(ShipDatas* shipData, float dt)
 	int firstInactive = shipData->firstInactiveShip;
 	for(int i = 0; i < firstInactive; i++)
 	{
-		Ship ship = ships[i];
-		ship.rotation = Vector2Angle(vector2_up,ship.moveDirection);
-		ship.rotation = (int)(ship.rotation * RAD2DEG) % 360;
-		if(ship.rotation < 0) ship.rotation += 360;
-		ships[i] = ship;
+		float rotation = ships[i].rotation;
+		rotation = EulerFromVector(ships[i].moveDirection);
+		//if(i == 0) printf("rot: %.5f \n", rotation);
+		ships[i].rotation = rotation;
 	}
 }
 
@@ -391,7 +392,6 @@ void ProcessBulletCollisions(BulletDatas* bulletData, ShipDatas* shipData, int s
     int bulletCount = bulletData->firstInactive;
     int shipCount = shipData->firstInactiveShip;
     Ship* ships = shipData->data;
-
     for (int i = 0; i < bulletCount; i++)
     {
         Bullet bullet = bullets[i];
@@ -401,7 +401,7 @@ void ProcessBulletCollisions(BulletDatas* bulletData, ShipDatas* shipData, int s
         {
             Ship ship = ships[s];
             if (bullet.team == ship.team || ~ship.flags & ship_flag_active) continue;
-
+			printf("process %d, %d", i,s);
             Rectangle rec1 = bullet.sprite.rect;
             rec1.x = bullet.collider.x + bullet.position.x;
             rec1.y = bullet.collider.y + bullet.position.y;

@@ -41,3 +41,16 @@ Sprite* CreateSprites(Texture2D texture,
 	}
 	return result;
 }
+
+void DrawSpriteRotated(Sprite sprite, 
+		Vector2 position, 
+		float rotationEuler, int scaleFactorX)
+{
+		Rectangle spriteRectangle = sprite.rect;
+		Rectangle destination = {position.x, position.y, 
+								spriteRectangle.width * scaleFactorX, spriteRectangle.height * scaleFactorX};
+		Vector2 pivot = {sprite.pivot.x * scaleFactorX,sprite.pivot.y * scaleFactorX};
+		DrawTexturePro(sprite.texture, sprite.rect, destination, 
+			pivot, rotationEuler, WHITE);
+		//printf("%f %f", sprite.pivot.x, sprite.pivot.y);
+}
