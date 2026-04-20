@@ -122,7 +122,7 @@ int main(){
 		//printf("\n %.5f", dt);
 		Vector2 mousePos = GetMousePosition();
 		ui_cast_result uiInput = {-1,-1};
-		if(IsKeyDown(KEY_ONE))
+		if(IsKeyPressed(KEY_ONE))
 		{
 			do
 			{
@@ -187,7 +187,7 @@ int main(){
 
 		Vector2 targetVector = {0};
 		if(datas.data[playerShip].flags & ship_flag_move){
-			targetVector = datas.data[playerShip].moveDirection;
+			targetVector = datas.data[playerShip].lookDirection;
 		}else
 		{
 			targetVector = vector2_zero;
@@ -201,15 +201,15 @@ int main(){
 		if(IsGamepadAvailable(0))
 		{
 			printf("%.10f %.10f \n", gamepad_input.x, gamepad_input.y);
-			datas.data[playerShip].moveDirection = Vector2Normalize(gamepad_input);
-			moving = gamepad_input.x > 0.1f || gamepad_input.x < -0.1f || gamepad_input.y > 0.1f || gamepad_input.y < -0.1f;
+			datas.data[playerShip].targetDirection = Vector2Normalize(gamepad_input);
+			moving = gamepad_input.x > 0.5f || gamepad_input.x < -0.5f || gamepad_input.y > 0.5f || gamepad_input.y < -0.5f;
 		}else
 		if(IsMouseButtonDown(0))
 		{
 			//printf("%.5f\n", dt);
-			datas.data[playerShip].moveDirection = //Vector2Normalize(mouseRelativePosition);
-				Vector2NormalizedSlerp(datas.data[playerShip].moveDirection, Vector2Normalize(mouseRelativePosition),dt * 10);
-			//printf("x: %.5f y: %.5f\n",datas.data[playerShip].moveDirection.x, datas.data[playerShip].moveDirection.y);
+			datas.data[playerShip].targetDirection = Vector2Normalize(mouseRelativePosition);
+				Vector2NormalizedSlerp(datas.data[playerShip].lookDirection, Vector2Normalize(mouseRelativePosition),dt);
+			//printf("x: %.5f y: %.5f\n",datas.data[playerShip].lookDirection.x, datas.data[playerShip].lookDirection.y);
 			moving = true;
 		}else
 		{
@@ -219,40 +219,43 @@ int main(){
 			bool w = IsKeyDown(KEY_W);
 			if(a || s || w || d)
 			{
-				datas.data[playerShip].moveDirection = vector2_zero;
+				datas.data[playerShip].lookDirection = vector2_zero;
 				if(a)
 				{
-					datas.data[playerShip].moveDirection = 
-					Vector2Add(datas.data[playerShip].moveDirection,
+					datas.data[playerShip].lookDirection = 
+					Vector2Add(datas.data[playerShip].lookDirection,
 					 (Vector2){-1,0});
 					moving = 1;
 				}
 				if(s)
 				{
-					datas.data[playerShip].moveDirection = 
-					Vector2Add(datas.data[playerShip].moveDirection,
+					datas.data[playerShip].lookDirection = 
+					Vector2Add(datas.data[playerShip].lookDirection,
 					 (Vector2){0,1});
 					moving = 1;
 				}
 				if(d)
 				{
-					datas.data[playerShip].moveDirection = 
-					Vector2Add(datas.data[playerShip].moveDirection,
+					datas.data[playerShip].lookDirection = 
+					Vector2Add(datas.data[playerShip].lookDirection,
 					 (Vector2){1,0});
 					moving = 1;
 				}
 				if(w)
 				{
-					datas.data[playerShip].moveDirection = 
-					Vector2Add(datas.data[playerShip].moveDirection,
+					datas.data[playerShip].lookDirection = 
+					Vector2Add(datas.data[playerShip].lookDirection,
 					 (Vector2){0,-1});
 					moving = 1;
 				}
 			}
 			
 		}
-		if(moving) datas.data[playerShip].flags = datas.data[playerShip].flags | ship_flag_move;
-		else datas.data[playerShip].flags = datas.data[playerShip].flags & ((~ship_flag_move) + 1);
+		if(moving) 
+		{
+			datas.data[playerShip].flags = datas.data[playerShip].flags | ship_flag_move | ship_flag_rotate;
+		}
+		else datas.data[playerShip].flags = datas.data[playerShip].flags & (~(ship_flag_move | ship_flag_rotate));
 		//bulletTimer += dt;
 		if((IsMouseButtonDown(1) || IsKeyDown(KEY_SPACE)))
 		{

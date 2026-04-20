@@ -1,5 +1,7 @@
 Gameplay: 
-- Rotation speed
+- rotation state 
+- command queue
+- Physics similar collision resolving
 - Drift
 - Line with repeatable texture
 - Projectiles that can follow target
@@ -7,12 +9,14 @@ Gameplay:
 - Game state
 - Highlighting ships
 - Ship Stats UI
-- Gamepad X/Y axis isn't working properly
-- Physics similar collision resolving
+
 
 Engine:
+- animation choose at runtime
+- attached animation event shown at runtime
 - drawing module
 - refactor engine.c
+- sound
 - Create collider from prefab
 - Reassign changed animation to editing ship AddEventToEditingAnimation
 - Refactor animation events
@@ -31,6 +35,8 @@ Engine:
 - Sprite shape detection -- Rectangle detection done; make Polygon
 - Multiplayer
 Done: 
+- ship orientation(look direction)
+- Rotation speed
 - Translation Unit architecture
 - Animation events 
 - UI parenting/childrening

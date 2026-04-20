@@ -4,8 +4,9 @@
 
 #define ship_flag_active 	 1
 #define ship_flag_move 		 1 << 1
-#define ship_flag_shoot 	 1 << 2
-#define ship_flag_destroy 	 1 << 3
+#define ship_flag_rotate     1 << 2
+#define ship_flag_shoot 	 1 << 3
+#define ship_flag_destroy 	 1 << 4
 #define ship_flag_reset 	 1 << 6
 #define ship_flag_remove 	 1 << 7
 
@@ -34,7 +35,8 @@ typedef struct Ship
     float rotation; // 4
     FrameAnimation* animations; // 8 byte
     Vector2 position; // 8 
-    Vector2 moveDirection; // 8
+    Vector2 lookDirection; // 8
+    Vector2 targetDirection;
     char team; // 1
     unsigned char flags;// 1 
     unsigned char state;// 1

@@ -117,7 +117,7 @@ void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas)
 				ship.flags^=ship_flag_shoot;
 				ship.bulletToSpawn.position = ship.position;
 				Vector2 moveAddition = vector2_zero;
-				ship.bulletToSpawn.moveDirection = Vector2Normalize(ship.moveDirection);
+				ship.bulletToSpawn.moveDirection = Vector2Normalize(ship.lookDirection);
 
 				SpawnBullet(bulletDatas,ship.bulletToSpawn);
 
@@ -219,8 +219,8 @@ void ProcessMovement(ShipDatas* shipData, float dt, float scaleFactor)
 		Ship ship = ships[i];
 		if(ship.flags & ship_flag_move && ship.flags & ship_flag_active)
 		{
-			Vector2 moveVector = {ship.moveDirection.x * ship.moveSpeed * dt,
-								ship.moveDirection.y * ship.moveSpeed * dt};
+			Vector2 moveVector = {ship.lookDirection.x * ship.moveSpeed * dt,
+								ship.lookDirection.y * ship.moveSpeed * dt};
 			ship.position = Vector2Add(ship.position, moveVector);
 			if(ship.engine.animation.sprites != NULL)
 			ProcessEngine(ship.position, ship.rotation, &ship.engine, dt,scaleFactor);
@@ -235,10 +235,13 @@ void ProcessRotation(ShipDatas* shipData, float dt)
 	int firstInactive = shipData->firstInactiveShip;
 	for(int i = 0; i < firstInactive; i++)
 	{
-		float rotation = ships[i].rotation;
-		rotation = EulerFromVector(ships[i].moveDirection);
+		if(!(ships[i].flags & ship_flag_rotate)) continue;
+		ships[i].lookDirection = 
+			Vector2NormalizedSlerp(ships[i].lookDirection, ships[i].targetDirection,dt);
 		//if(i == 0) printf("rot: %.5f \n", rotation);
-		ships[i].rotation = rotation;
+		ships[i].rotation = EulerFromVector(
+			ships[i].lookDirection
+		) + 180;
 	}
 }
 
@@ -401,7 +404,7 @@ void ProcessBulletCollisions(BulletDatas* bulletData, ShipDatas* shipData, int s
         {
             Ship ship = ships[s];
             if (bullet.team == ship.team || ~ship.flags & ship_flag_active) continue;
-			printf("process %d, %d", i,s);
+			//printf("process %d, %d", i,s);
             Rectangle rec1 = bullet.sprite.rect;
             rec1.x = bullet.collider.x + bullet.position.x;
             rec1.y = bullet.collider.y + bullet.position.y;
