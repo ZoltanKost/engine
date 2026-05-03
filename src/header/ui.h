@@ -52,7 +52,7 @@ int add_ui_element(ui_element_datas* data, ui_element element, int parentID);
 ui_element create_ui_element(Rectangle rect, Sprite sprite, Color color, int layer, char flags, char children_flags, char layout_flags, void (*callback)(int));
 void calculate_ui_positions(ui_element_datas* UIdata, Camera2D cam);
 void draw_ui(ui_element_datas* UIdata, Camera2D cam);
-ui_cast_result cast_over_ui(ui_element_datas *datas, Vector2 screenInput);
+ui_cast_result cast_over_ui(ui_element_datas datas, Vector2 screenInput);
 void remove_inactive_elements(ui_element_datas* ui_elementData);
 void process_ui(ui_element_datas* data, float dt, Camera2D cam);
 

@@ -9,6 +9,7 @@
 #include "ui.h"
 #include "utils.h"
 #include "ship.h"
+#include "animeditor.h"
 
 
 static float starsSpeedMultiplier = 12.0f;
@@ -20,11 +21,11 @@ static Texture2D nullTexture = {
 	.id = -1
 };
 static FrameAnimation editingAnimation = {0};
-static char current_event_animation_flag = 1 << 6;
 
 #define SCREEN_WIDTH 1368
 #define SCREEN_HEIGHT 720 
 
+void CastUI(Vector2 mousePos, ui_element_datas uiDatas);
 
 int InitEditAnimationWindow(FrameAnimation editingAnimation, 
 							int* editing_frame_count, int parentID, ui_element_datas* uiDatas);

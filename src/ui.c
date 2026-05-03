@@ -132,10 +132,10 @@ void draw_ui(ui_element_datas* UIdata, Camera2D cam)
 	}
 }
 
-ui_cast_result cast_over_ui(ui_element_datas *datas, Vector2 screenInput)
+ui_cast_result cast_over_ui(ui_element_datas datas, Vector2 screenInput)
 {
-	int firstInactive = datas->firstInactive;
-	ui_element* data = datas->data;
+	int firstInactive = datas.firstInactive;
+	ui_element* data = datas.data;
 	ui_cast_result result = {-1,0};
 	int resultPriority = -1;
 	//printf("count: %d \n", firstInactive);

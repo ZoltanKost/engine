@@ -116,26 +116,19 @@ int main(){
 	{
 		BeginMode2D(camera);
 		ClearBackground(bgColor);
-
 		
 		float dt = GetFrameTime();
 		//printf("\n %.5f", dt);
 		Vector2 mousePos = GetMousePosition();
-		ui_cast_result uiInput = {-1,-1};
+		Vector2 gamepad_input = {0};
+		bool moving = false;
+
+		spawn += dt;
+
+		bool mousePressed = IsMouseButtonPressed(0);
 		if(IsKeyPressed(KEY_ONE))
 		{
-			do
-			{
-				if(current_event_animation_flag & ship_flag_remove)
-				{
-					current_event_animation_flag = 4;
-					break;
-				}
-				current_event_animation_flag <<= 1;
-			}while(!(current_event_animation_flag & ship_flag_reset 
-				|| current_event_animation_flag & ship_flag_shoot
-				|| current_event_animation_flag & ship_flag_remove));
-			printf("flag: %d\n", current_event_animation_flag);
+			SwitchEditingAnimationFlag();
 		}
 		if(IsKeyDown(KEY_TWO))
 		{
@@ -151,26 +144,10 @@ int main(){
 		{
 			datas.data[playerShip].state = ship_state_destroy;
 		}
-		bool mousePressed = IsMouseButtonPressed(0);
 		if(mousePressed)
 		{
-			uiInput = cast_over_ui(&uiDatas, mousePos);
-			if(uiInput.id > -1)
-			{
-				int number_in_children = uiDatas.data[uiInput.id].number_in_children;
-				if(uiInput.flags & ui_flag_button && uiDatas.data[uiInput.id].callback != 0)
-				{
-					uiDatas.data[uiInput.id].callback(number_in_children - 1);
-				}
-				//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames, (int)datas.data[0].animations[2].frames, (int)datas.data[1].animations[2].frames);
-				//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames[number_in_children - 1].event, (int)datas.data[0].animations[2].frames[number_in_children - 1].event, (int)datas.data[1].animations[2].frames[number_in_children - 1].event);
-				//ship.animations[1] = editingAnimation;
-				//datas.data[0].animations[1] = editingAnimation;
-				//WriteFrameAnimationToFile(editingAnimation, "shoot_animation.anim");
-			}
+			CastUI(mousePos, uiDatas);
 		}
-		Vector2 gamepad_input = {0};
-		bool moving = false;
 		if(IsGamepadAvailable(0))
 		{
 			gamepad_input.x = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_X);
@@ -183,8 +160,8 @@ int main(){
 			mousePos.x - datas.data[playerShip].position.x - camera.offset.x,
 			mousePos.y - datas.data[playerShip].position.y - camera.offset.y
 		};
-		spawn += dt;
-
+		
+		// Parallax
 		Vector2 targetVector = {0};
 		if(datas.data[playerShip].flags & ship_flag_move){
 			targetVector = datas.data[playerShip].lookDirection;
@@ -198,6 +175,7 @@ int main(){
 			unitsInWidth, unitsInHeight,
 			space_dust, space_nebulae, space_stars);
 		
+			// Movement uiInput
 		if(IsGamepadAvailable(0))
 		{
 			printf("%.10f %.10f \n", gamepad_input.x, gamepad_input.y);
@@ -249,18 +227,20 @@ int main(){
 					moving = 1;
 				}
 			}
-			
 		}
+
+		if((IsMouseButtonDown(1) || IsKeyDown(KEY_SPACE)))
+		{
+			datas.data[playerShip].state |= ship_state_shooting;
+		}
+
+
 		if(moving) 
 		{
 			datas.data[playerShip].flags = datas.data[playerShip].flags | ship_flag_move | ship_flag_rotate;
 		}
 		else datas.data[playerShip].flags = datas.data[playerShip].flags & (~(ship_flag_move | ship_flag_rotate));
 		//bulletTimer += dt;
-		if((IsMouseButtonDown(1) || IsKeyDown(KEY_SPACE)))
-		{
-			datas.data[playerShip].state |= ship_state_shooting;
-		}
 
 		ProcessShips(&datas, &bulletDatas,dt, scaleFactorX);
 		ProcessBullets(&bulletDatas, dt, scaleFactorX);
@@ -276,6 +256,22 @@ int main(){
 	return 0;
 }
 
+void DetectRectangle(Image image)
+{
+	for(int y = 0; y < image.height; y++)
+	{
+		int yOffset = y * image.height;
+		for(int x = 0; x < image.width; x++)
+		{
+
+			Color color = GetImageColor(image,x,y);
+			if(color.a) 
+			{
+				printf("\n hit picture %d, %d ",x,y);
+			}
+		}
+	}
+}
 
 void DrawBackgroundParallax(Camera2D camera, Vector2 speed, int width, int height,
 	int unitsInWidth, int unitsInHeight,
@@ -310,124 +306,21 @@ void DrawBackgroundParallax(Camera2D camera, Vector2 speed, int width, int heigh
 	DrawTexturePro(texture1, backgroundRect, dustRect, vector2_zero, 0.0f, WHITE);
 }
 
-void AddFrameToEditingAnimation(int paramsCount)
+void CastUI(Vector2 mousePos, ui_element_datas uiDatas)
 {
-	// TODO: allocations
-	return;
-	printf("Adding frame...\n");
-	editingAnimation.frames = MemRealloc(editingAnimation.frames, editingAnimation.frame_count++);
-}
-
-void AddEventToEditingAnimation(int frameNumber)
-{
-	editingAnimation.frames[frameNumber].event ^= current_event_animation_flag;
-	printf("for frame %d added event %d \n",frameNumber,ship_flag_reset);
-}
-
-
-void DetectRectangle(Image image)
-{
-	for(int y = 0; y < image.height; y++)
-	{
-		int yOffset = y * image.height;
-		for(int x = 0; x < image.width; x++)
+		ui_cast_result uiInput = {-1,-1};
+		uiInput = cast_over_ui(uiDatas, mousePos);
+		if(uiInput.id > -1)
 		{
-
-			Color color = GetImageColor(image,x,y);
-			if(color.a) 
+			int number_in_children = uiDatas.data[uiInput.id].number_in_children;
+			if(uiInput.flags & ui_flag_button && uiDatas.data[uiInput.id].callback != 0)
 			{
-				printf("\n hit picture %d, %d ",x,y);
+				uiDatas.data[uiInput.id].callback(number_in_children - 1);
 			}
+			//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames, (int)datas.data[0].animations[2].frames, (int)datas.data[1].animations[2].frames);
+			//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames[number_in_children - 1].event, (int)datas.data[0].animations[2].frames[number_in_children - 1].event, (int)datas.data[1].animations[2].frames[number_in_children - 1].event);
+			//ship.animations[1] = editingAnimation;
+			//datas.data[0].animations[1] = editingAnimation;
+			//WriteFrameAnimationToFile(editingAnimation, "shoot_animation.anim");
 		}
-	}
 }
-
-
-int InitEditAnimationWindow(FrameAnimation editingAnimation, 
-							int* editing_frame_count, int parentID, ui_element_datas* uiDatas)
-{
-	// TODO: implement parenting
-	if(parentID != 0) return -1;
-	// Create UI background
-	Rectangle element = {0,SCREEN_HEIGHT - SCREEN_HEIGHT/4,SCREEN_WIDTH,SCREEN_HEIGHT/4};
-	Rectangle element1 = {0,0,SCREEN_WIDTH * 4 / 6,SCREEN_HEIGHT/4};
-	ui_element el = create_ui_element(element,(Sprite){0},DARKGRAY,0,ui_flag_rawRect, 2,0,0);
-	ui_element el1 = create_ui_element(element1,(Sprite){0},GRAY,1,ui_flag_rawRect, layout_flexibleY_in_parent, layout_relative_pos,0);
-	int ui = add_ui_element(uiDatas,el,-1);
-	int ui1 = add_ui_element(uiDatas,el1,ui);
-
-	// Construct parent rect1
-
-	ui_element el2 = create_ui_element(element1,(Sprite){0},WHITE,2,ui_flag_rawRect, layout_flexibleX_in_parent, layout_relative_pos,0);
-	el2.rect.height /= 4;
-	el2.rect.width /= 2;
-	int ui_top = add_ui_element(uiDatas,el2,ui1);
-	//el1.rect.y += el1.rect.height * 2;
-	int ui_mid = add_ui_element(uiDatas,el2,ui1);
-
-
-	// Create button for sprites
-	Rectangle buttonRect = {0,0,48,48};
-	//buttonRect.y += 40;
-	ui_element sprite_button = 
-			create_ui_element(buttonRect, (Sprite){0},LIGHTGRAY,4,ui_flag_button,0,1,0);
-
-	buttonRect = (Rectangle){0,0,8,32};
-	ui_element buttonEl = create_ui_element(buttonRect,(Sprite){0},LIGHTGRAY,4,ui_flag_rawRect | ui_flag_button,0,1,AddEventToEditingAnimation);
-	for(int i = 0; i < editingAnimation.frame_count; i++)
-	{
-		int buttonE1 = add_ui_element(uiDatas,buttonEl,ui_top);
-		//printf("id: %d flags: %d n: %d \n",buttonE1,uiDatas.data[buttonE1].flags, uiDatas->data[buttonE1].number_in_children );
-		sprite_button.sprite = editingAnimation.sprites[i];
-		int button_sprite = add_ui_element(uiDatas,sprite_button,ui_mid);
-	}
-
-	*editing_frame_count = editingAnimation.frame_count;
-
-	return ui;
-}
-
-int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
-							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas)
-{
-	printf("Start reinitting frames: %d\n", editingAnimation.frame_count);
-	if(existingWindowParent < 0) return -1;
-	ui_element* data = uiDatas->data;
-	int parentID =  existingWindowParent + 2; // ADD NUMBER OF UI ELEMENTS HERE
-	if(editingAnimation.frame_count < 1 || data[parentID].childrenCount < 1)
-	{
-		printf("!(editingAnimation.frame_count < 1 || data[parentID].childrenCount). create window again\n");
-		return -1;
-	}
-
-	for(int i = 0; i < editingAnimation.frame_count; i++)
-	{
-		int buttonID = -1;
-		// TODO: remove out of loop; check lengths
-		if(data[parentID].childrenCount <= i)
-		{
-			printf("Not enough ui elements (bt), resizing\n");
-			int copy_id = data[parentID].childrenID[0];
-			printf("copy id: %d\n", copy_id);
-			ui_element copy = data[copy_id];
-			buttonID = add_ui_element(uiDatas, copy, parentID);
-			printf("resized\n");
-		}else buttonID = data[parentID].childrenID[i];
-		/*if(data[parentID + 1].childrenCount <= i)
-		{
-			printf("Not enough ui elements (sprites), resizing. childrenCount: %d capacity: %d \n", data[parentID + 1].childrenCount, data[parentID + 1].childrenCapacity);
-			int copy_id = data[parentID + 1].childrenID[0];
-			ui_element copy = data[copy_id];
-			copy.sprite = editingAnimation.sprites[i];
-			//int button_sprite = add_ui_element(uiDatas, copy, parentID + 1);
-			printf("resized\n");
-		}*/
-		printf("reassigned: id: %d flags: %d n: %d \n",buttonID,data[buttonID].flags, data[buttonID].number_in_children );
-	}
-
-	*editing_frame_count = editingAnimation.frame_count;
-
-	return existingWindowParent;
-}
-
-

@@ -35,6 +35,8 @@ typedef struct CurrentAnimationData
 	float time;
 } CurrentAnimationData;
 
+extern FrameAnimation * FrameAnimationArray;
+
 Animation CreateAnimation(Texture2D texture,
 			float frameDuration, Vector2 spritePivot,
 			int spriteWidth, int spriteHeight);
@@ -42,5 +44,7 @@ Animation CreateAnimation(Texture2D texture,
 FrameAnimation CreateFrameAnimationFromTexture(Texture2D texture,
 			float anim_duration, Vector2 spritePivot,
 			int spriteWidth, int spriteHeight);
+
+void InitAnimations();
 
 #endif

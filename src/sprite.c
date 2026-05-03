@@ -12,7 +12,7 @@ Sprite CreateSprite(Texture2D texture,
 	res.pivot = pivot;
 	return res;
 }
-
+// TODO: allocation localization
 Sprite* CreateSprites(Texture2D texture,
 	Vector2 pivot, int width, int height, int* sCount)
 {

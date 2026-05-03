@@ -1,6 +1,8 @@
 #include "animation.h"
 
-
+FrameAnimation * FrameAnimationArray;
+static anim_capacity = 0;
+static anim_length = 0;
 bool WriteFrameAnimationToFile(FrameAnimation animation, char* animationName)
 {
 	char* filename = animationName;
@@ -53,11 +55,12 @@ bool ReadFrameAnimation(char* filename, FrameAnimation* animation)
 	fclose(file_ptr);
 	return 1;
 }
-
+// TODO: allocation localization
 FrameAnimation CreateFrameAnimationFromTexture(Texture2D texture,
 			float anim_duration, Vector2 spritePivot,
 			int spriteWidth, int spriteHeight)
 {
+	if(anim_capacity == 0)InitAnimations();
 	FrameAnimation result;
 
 	Sprite* sprites = CreateSprites(texture, spritePivot,
@@ -74,6 +77,12 @@ FrameAnimation CreateFrameAnimationFromTexture(Texture2D texture,
 			.rotation = 0,
 		};
 	}
+	if(anim_length >= anim_capacity)
+	{
+		anim_capacity*=2;
+		MemRealloc(FrameAnimationArray,sizeof(FrameAnimation) * anim_capacity);
+	}
+	FrameAnimationArray[anim_length++] = result;
 	return result;
 }
 
@@ -82,6 +91,7 @@ Animation CreateAnimation(Texture2D texture,
 			float frameDuration, Vector2 spritePivot,
 			int spriteWidth, int spriteHeight)
 {
+	if(anim_capacity == 0)InitAnimations();
 	Animation result;
 	result.frameDuration = frameDuration;
 	Sprite* sprites = CreateSprites(texture, spritePivot,
@@ -89,3 +99,11 @@ Animation CreateAnimation(Texture2D texture,
 	result.sprites = sprites;
 	return result;
 }
+
+void InitAnimations()
+{
+	FrameAnimationArray = MemAlloc(sizeof(FrameAnimation) * 16);
+	anim_capacity = 16;
+	//assert(frameAnimation == 0);
+}
+ 

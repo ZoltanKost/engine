@@ -12,10 +12,13 @@ Gameplay:
 
 
 Engine:
+- list of existing animations
+- create new animation
 - animation choose at runtime
 - attached animation event shown at runtime
 - drawing module
 - refactor engine.c
+- animation and spritesallocations localization
 - sound
 - Create collider from prefab
 - Reassign changed animation to editing ship AddEventToEditingAnimation
