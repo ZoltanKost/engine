@@ -33,6 +33,7 @@ typedef struct Ship
     int animationCount; // 4
     float moveSpeed; // 4
     float rotation; // 4
+    float rotationVelocity;
     FrameAnimation* animations; // 8 byte
     Vector2 position; // 8 
     Vector2 lookDirection; // 8

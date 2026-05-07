@@ -1,6 +1,13 @@
 #include "utils.h"
 #include <io.h>
 static const float hPi = PI / 2;
+static const float twoPi = PI * 2;
+
+float ArcLength(Vector2 v1, Vector2 v2)
+{
+	return Vector2Angle(v1,v2);
+}
+
 Rectangle DetectCollisionRectangle(Image image, int xMax, int yMax)
 {
 	int minX = xMax; int minY = yMax; 
@@ -32,6 +39,13 @@ Vector2 Vector2NormalizedSlerp(Vector2 v1, Vector2 v2, float a)
 	v1 = Vector2Scale(v1,a1);
 	v2 = Vector2Scale(v2,a2);
 	return Vector2Normalize(Vector2Add(v1,v2));
+}
+
+float NormalizedDifferenceLength(Vector2 v1, Vector2 v2)
+{
+	Vector2 diff = Vector2Subtract(v1,v2);
+	float l = Vector2LengthSqr(diff);
+	return l;
 }
 
 

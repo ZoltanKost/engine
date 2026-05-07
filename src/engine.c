@@ -186,7 +186,7 @@ int main(){
 		{
 			//printf("%.5f\n", dt);
 			datas.data[playerShip].targetDirection = Vector2Normalize(mouseRelativePosition);
-				Vector2NormalizedSlerp(datas.data[playerShip].lookDirection, Vector2Normalize(mouseRelativePosition),dt);
+				//Vector2NormalizedSlerp(datas.data[playerShip].lookDirection, Vector2Normalize(mouseRelativePosition),dt);
 			//printf("x: %.5f y: %.5f\n",datas.data[playerShip].lookDirection.x, datas.data[playerShip].lookDirection.y);
 			moving = true;
 		}else

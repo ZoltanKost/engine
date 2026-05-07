@@ -81,8 +81,8 @@ void ProcessShips(ShipDatas* shipData, BulletDatas* bulletData, float dt,int sca
 	int firstInactive = shipData->firstInactiveShip;
 	RemoveUnactiveShips(shipData);
 	ProcessState(shipData, bulletData);
-	ProcessMovement(shipData, dt,scaleFactor);
 	ProcessRotation(shipData, dt);
+	ProcessMovement(shipData, dt,scaleFactor);
 	ProcessCollisions(shipData, scaleFactor);
 	ProcessBulletCollisions(bulletData,shipData,scaleFactor);
 	ProcessAnimation(shipData, dt,scaleFactor);
@@ -219,16 +219,19 @@ void ProcessMovement(ShipDatas* shipData, float dt, float scaleFactor)
 		Ship ship = ships[i];
 		if(ship.flags & ship_flag_move && ship.flags & ship_flag_active)
 		{
-			Vector2 moveVector = {ship.lookDirection.x * ship.moveSpeed * dt,
-								ship.lookDirection.y * ship.moveSpeed * dt};
-			ship.position = Vector2Add(ship.position, moveVector);
-			if(ship.engine.animation.sprites != NULL)
+			if(!(ship.flags & ship_flag_rotate))
+			{
+				Vector2 moveVector = {ship.lookDirection.x * ship.moveSpeed * dt,
+									ship.lookDirection.y * ship.moveSpeed * dt};
+				ship.position = Vector2Add(ship.position, moveVector);
+				if(ship.engine.animation.sprites != NULL)
+				ships[i] = ship;
+			}
 			ProcessEngine(ship.position, ship.rotation, &ship.engine, dt,scaleFactor);
-			ships[i] = ship;
 		}
 	}
 }
-
+// TODO: optimize
 void ProcessRotation(ShipDatas* shipData, float dt)
 {
 	Ship* ships = shipData->data;
@@ -236,12 +239,26 @@ void ProcessRotation(ShipDatas* shipData, float dt)
 	for(int i = 0; i < firstInactive; i++)
 	{
 		if(!(ships[i].flags & ship_flag_rotate)) continue;
+		
+		if(NormalizedDifferenceLength(ships[i].targetDirection, ships[i].lookDirection) < 0.01f)
+		{
+			ships[i].flags = ships[i].flags ^ ship_flag_rotate;
+			continue;
+		}
+		/*
+			rotation Velocity = 360 / 1s
+		*/
+		float path = ArcLength(ships[i].lookDirection,ships[i].targetDirection);
+		if(path < 0) path = -path;
+		/*path *= RAD2DEG;
+		path %= 360;*/
+		//if(i == 0)printf("path: %.5f\n",path);
 		ships[i].lookDirection = 
-			Vector2NormalizedSlerp(ships[i].lookDirection, ships[i].targetDirection,dt);
+			Vector2NormalizedSlerp(ships[i].lookDirection, ships[i].targetDirection,(PI/2 * dt)/path);
 		//if(i == 0) printf("rot: %.5f \n", rotation);
 		ships[i].rotation = EulerFromVector(
 			ships[i].lookDirection
-		) + 180;
+		);
 	}
 }
 

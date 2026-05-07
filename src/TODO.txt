@@ -1,5 +1,4 @@
 Gameplay: 
-- rotation state 
 - command queue
 - Physics similar collision resolving
 - Drift
@@ -13,7 +12,7 @@ Gameplay:
 
 Engine:
 - list of existing animations
-- create new animation
+- create new animation button
 - animation choose at runtime
 - attached animation event shown at runtime
 - drawing module
@@ -38,6 +37,7 @@ Engine:
 - Sprite shape detection -- Rectangle detection done; make Polygon
 - Multiplayer
 Done: 
+- rotation state
 - ship orientation(look direction)
 - Rotation speed
 - Translation Unit architecture
