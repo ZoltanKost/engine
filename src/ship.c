@@ -227,6 +227,7 @@ void ProcessMovement(ShipDatas* shipData, float dt, float scaleFactor)
 				if(ship.engine.animation.sprites != NULL)
 				ships[i] = ship;
 			}
+			// TODO: not working for some reason
 			ProcessEngine(ship.position, ship.rotation, &ship.engine, dt,scaleFactor);
 		}
 	}
@@ -258,7 +259,7 @@ void ProcessRotation(ShipDatas* shipData, float dt)
 		//if(i == 0) printf("rot: %.5f \n", rotation);
 		ships[i].rotation = EulerFromVector(
 			ships[i].lookDirection
-		);
+		) + 180;
 	}
 }
 

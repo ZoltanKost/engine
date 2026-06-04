@@ -1,5 +1,13 @@
 #include "animeditor.h"
 
+/*
+	Animations are made from textures, from sprites, and they have Events attached to frames.
+	AnimEditor opens a window with a look of sprites and attached events
+	Click to the event button should attach a specific event to specific frame. Events are specified in window.
+	Animation window has a scroll with all availible animations.
+	Animation window also has save button.
+*/
+
 static FrameAnimation editingAnimation = {0};
 static char current_event_animation_flag = 1 << 6;
 void AddFrameToEditingAnimation(int paramsCount)
@@ -17,6 +25,26 @@ void AddEventToEditingAnimation(int frameNumber)
 	printf("for frame %d added event %d \n",frameNumber,current_event_animation_flag);
 }
 
+void SwitchEditingAnimationFlag(int id)
+{
+    do
+    {
+        if(current_event_animation_flag & ship_flag_remove)
+        {
+            current_event_animation_flag = 4;
+            break;
+        }
+        current_event_animation_flag <<= 1;
+    }while(!(current_event_animation_flag & ship_flag_reset 
+        || current_event_animation_flag & ship_flag_shoot
+        || current_event_animation_flag & ship_flag_remove));
+    printf("flag: %d\n", current_event_animation_flag);
+}
+
+void CloseEditAnimationWindow(int param)
+{
+	//remove_ui_element();
+}
 
 int InitEditAnimationWindow(FrameAnimation _editingAnimation, 
 							int* editing_frame_count, int parentID, ui_element_datas* uiDatas)
@@ -27,29 +55,47 @@ int InitEditAnimationWindow(FrameAnimation _editingAnimation,
 	// Create UI background
 	Rectangle element = {0,SCREEN_HEIGHT - SCREEN_HEIGHT/4,SCREEN_WIDTH,SCREEN_HEIGHT/4};
 	Rectangle element1 = {0,0,SCREEN_WIDTH * 4 / 6,SCREEN_HEIGHT/4};
-	ui_element el = create_ui_element(element,(Sprite){0},DARKGRAY,0,ui_flag_rawRect, 2,0,0);
-	ui_element el1 = create_ui_element(element1,(Sprite){0},GRAY,1,ui_flag_rawRect, layout_flexibleY_in_parent, layout_relative_pos,0);
+	ui_element el = create_ui_element(element,(Sprite){0},DARKGRAY,0,ui_flag_rawRect, 2,0,0); // background
+	ui_element el1 = create_ui_element(element1,(Sprite){0},GRAY,1,ui_flag_rawRect, layout_flexibleY_in_parent, layout_relative_pos,0); // frames background
 	int ui = add_ui_element(uiDatas,el,-1);
 	int ui1 = add_ui_element(uiDatas,el1,ui);
 
-	// Construct parent rect1
+
+	//TODO: create button for close window and attach it to the corner
+	ui_element closeButton =  create_ui_element(
+		(Rectangle){20,20,20,20}, 
+		(Sprite){0}, 
+		GRAY, 2, ui_flag_rawRect | ui_flag_button,0,layout_relative_pos, 
+		&CloseEditAnimationWindow
+	);
+
+	// TODO: create scroll window with all animations
+	// Construct parent for events and buttons
 
 	ui_element el2 = create_ui_element(element1,(Sprite){0},WHITE,2,ui_flag_rawRect, layout_flexibleX_in_parent, layout_relative_pos,0);
 	el2.rect.height /= 4;
 	el2.rect.width /= 2;
-	int ui_top = add_ui_element(uiDatas,el2,ui1);
+	int ui_top = add_ui_element(uiDatas,el2,ui1);  // parent for events
 	//el1.rect.y += el1.rect.height * 2;
-	int ui_mid = add_ui_element(uiDatas,el2,ui1);
+	int ui_mid = add_ui_element(uiDatas,el2,ui1); // parent for sprites
 
 
 	// Create button for sprites
 	Rectangle buttonRect = {0,0,48,48};
 	//buttonRect.y += 40;
 	ui_element sprite_button = 
-			create_ui_element(buttonRect, (Sprite){0},LIGHTGRAY,4,ui_flag_button,0,1,0);
+			create_ui_element(buttonRect, (Sprite){0},LIGHTGRAY,4,ui_flag_button,0,1,0); // sprite button
 
 	buttonRect = (Rectangle){0,0,8,32};
-	ui_element buttonEl = create_ui_element(buttonRect,(Sprite){0},LIGHTGRAY,4,ui_flag_rawRect | ui_flag_button,0,1,AddEventToEditingAnimation);
+	ui_element buttonEl = 
+		create_ui_element(buttonRect,(Sprite){0},LIGHTGRAY,4,
+							ui_flag_rawRect | ui_flag_button,0,1,AddEventToEditingAnimation); // ui Button
+	
+	ui_element choose_event_button = 
+		create_ui_element(buttonRect,(Sprite){0},LIGHTGRAY,4,
+							ui_flag_rawRect | ui_flag_button,0,1,SwitchEditingAnimationFlag);
+	
+
 	for(int i = 0; i < editingAnimation.frame_count; i++)
 	{
 		int buttonE1 = add_ui_element(uiDatas,buttonEl,ui_top);
@@ -57,6 +103,7 @@ int InitEditAnimationWindow(FrameAnimation _editingAnimation,
 		sprite_button.sprite = editingAnimation.sprites[i];
 		int button_sprite = add_ui_element(uiDatas,sprite_button,ui_mid);
 	}
+	add_ui_element(uiDatas,choose_event_button,ui_top);
 
 	*editing_frame_count = editingAnimation.frame_count;
 
@@ -104,20 +151,4 @@ int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation,
 	*editing_frame_count = editingAnimation.frame_count;
 
 	return existingWindowParent;
-}
-
-void SwitchEditingAnimationFlag()
-{
-    do
-    {
-        if(current_event_animation_flag & ship_flag_remove)
-        {
-            current_event_animation_flag = 4;
-            break;
-        }
-        current_event_animation_flag <<= 1;
-    }while(!(current_event_animation_flag & ship_flag_reset 
-        || current_event_animation_flag & ship_flag_shoot
-        || current_event_animation_flag & ship_flag_remove));
-    printf("flag: %d\n", current_event_animation_flag);
 }

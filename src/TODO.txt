@@ -11,6 +11,13 @@ Gameplay:
 
 
 Engine:
+- process engine animation properly
+- create button for choosing an animation event
+- create button for close window and attach it to the corner of anim window
+- create scroll window with all animations
+- rendering a string into a window
+- draw children without alingment respectively 
+- Modules instead of objects??
 - list of existing animations
 - create new animation button
 - animation choose at runtime

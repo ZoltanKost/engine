@@ -15,4 +15,4 @@ int InitEditAnimationWindow(FrameAnimation editingAnimation,
 
 int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
 							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas);
-void SwitchEditingAnimationFlag();
+void SwitchEditingAnimationFlag(int id);

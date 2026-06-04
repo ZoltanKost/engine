@@ -128,7 +128,7 @@ int main(){
 		bool mousePressed = IsMouseButtonPressed(0);
 		if(IsKeyPressed(KEY_ONE))
 		{
-			SwitchEditingAnimationFlag();
+			SwitchEditingAnimationFlag(0);
 		}
 		if(IsKeyDown(KEY_TWO))
 		{
