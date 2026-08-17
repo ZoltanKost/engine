@@ -11,7 +11,6 @@
 #include "ship.h"
 #include "animeditor.h"
 
-
 static float starsSpeedMultiplier = 12.0f;
 static float dustSpeedMultiplier = 24.0f;
 static float nebulaeSpeedMultiplier = 18.0f;

@@ -1,5 +1,7 @@
 #include "ship.h"
 
+float engine_update_time = 1.0f;
+
 ShipDatas InitShips(int initCount)
 {
 	ShipDatas result;
@@ -30,7 +32,7 @@ Ship CreateShip(Texture2D shipTexture, Texture2D shipShootTexture,
 	if(engineTexture.id != -1){
 		FrameAnimation engine_animation = 
 			CreateFrameAnimationFromTexture(engineTexture, 
-				1.0f, offset, engineTexture.height,
+				engine_update_time, offset, engineTexture.height,
 				engineTexture.height);
 		engine = (Engine){engine_animation,engine_animation.sprites[0],0,0.0f};
 	}
@@ -114,7 +116,7 @@ void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas)
 					ship.animData.current_animation = 1;
 					break;
 				}else if(!(ship.flags & ship_flag_shoot)) break;
-				ship.flags^=ship_flag_shoot;
+				ship.flags&=~ship_flag_shoot;
 				ship.bulletToSpawn.position = ship.position;
 				Vector2 moveAddition = vector2_zero;
 				ship.bulletToSpawn.moveDirection = Vector2Normalize(ship.lookDirection);
@@ -185,25 +187,24 @@ void ProcessAnimation(ShipDatas* data, float dt, int scaleFactor)
 		Ship ship = ships[i];
 		CurrentAnimationData animData = ship.animData;
 		int current_anim = animData.current_animation;
-		int current_frame = animData.current_frame;
 		animData.time += dt;
 		FrameAnimation currentAnim = ship.animations[current_anim];
-		if(animData.time > currentAnim.duration) 
+		if(animData.time >= currentAnim.duration) 
 		{
 			animData.time = 0;
 			animData.current_frame = 0;
 		}
-		if(animData.time > currentAnim.frames[current_frame].time 
-			&& (animData.current_frame < currentAnim.frame_count))
+		int current_frame = animData.current_frame;
+		if(current_frame < currentAnim.frame_count && animData.time >= currentAnim.frames[current_frame].time)
 		{
-			ship.flags = ship.flags | currentAnim.frames[animData.current_frame].event;
-			//if(ship.id == 0) printf("anim: %d frame %d sets flags: %d\n", current_anim, current_frame, currentAnim.frames[animData.current_frame].event);
-			int sprite_id = currentAnim.frames[animData.current_frame++].sprite_id;
+			ship.flags = ship.flags | currentAnim.frames[current_frame].event;
+			//if(ship.id == 0) printf("anim: %d frame %d sets flags: %d\n", current_anim, current_frame, currentAnim.frames[current_frame].event);
+			int sprite_id = currentAnim.frames[current_frame].sprite_id;
 			ship.sprite = currentAnim.sprites[sprite_id];
+			animData.current_frame++;
 		}
 
 		ship.animData = animData;
-		//if(i == 0) printf("animrot: %.5f", ship.rotation);
 		DrawSpriteRotated(ship.sprite,
 			ship.position,ship.rotation,scaleFactor);
 		ships[i] = ship;
@@ -217,18 +218,17 @@ void ProcessMovement(ShipDatas* shipData, float dt, float scaleFactor)
 	for(int i = 0; i < firstInactive; i++)
 	{
 		Ship ship = ships[i];
-		if(ship.flags & ship_flag_move && ship.flags & ship_flag_active)
+		if((ship.flags & ship_flag_move) && (ship.flags & ship_flag_active))
 		{
 			if(!(ship.flags & ship_flag_rotate))
 			{
 				Vector2 moveVector = {ship.lookDirection.x * ship.moveSpeed * dt,
 									ship.lookDirection.y * ship.moveSpeed * dt};
 				ship.position = Vector2Add(ship.position, moveVector);
-				if(ship.engine.animation.sprites != NULL)
-				ships[i] = ship;
+				//if(ship.engine.animation.sprites != NULL) // why only when != null
 			}
-			// TODO: not working for some reason
 			ProcessEngine(ship.position, ship.rotation, &ship.engine, dt,scaleFactor);
+			ships[i] = ship;
 		}
 	}
 }
@@ -272,26 +272,33 @@ inline void RemoveShip(ShipDatas* ships, int id)
 	data[id].id = id;
 	ships->firstInactiveShip = firstInactive;
 }
-
+// TODO: check whether can be optimized
 void ProcessEngine(Vector2 position, float rotation, Engine* _engine, float dt, int scaleFactor)
 {
 	Engine engine = *_engine;
 	engine.time += dt;
-	if(engine.time > engine.animation.duration)
+	
+	int currentFrame = engine.current_frame;
+	int nextFrame = currentFrame + 1;
+	if(nextFrame >= engine.animation.frame_count)
 	{
-		engine.time = 0;
-		engine.current_frame = 0;
-	}
-	if(engine.time > engine.animation.frames[engine.current_frame].time 
-		&& (engine.current_frame < engine.animation.frame_count))
-	{
-		/*if(++engine.current_frame >= engine.animation.frame_count)
+		if(engine.time >= engine.animation.duration) // waits for reset 
 		{
+			engine.time = 0;
 			engine.current_frame = 0;
-		}*/
-		int sprite_id =  engine.animation.frames[engine.current_frame++].sprite_id;
+
+			int sprite_id =  engine.animation.frames[0].sprite_id;
+			engine.sprite = engine.animation.sprites[sprite_id];
+		}
+	}  
+	else if(engine.time >= engine.animation.frames[nextFrame].time)
+	{
+		//printf("next frame %d %lf %lf\n", nextFrame, engine.time, engine.animation.frames[nextFrame].time);
+		int sprite_id =  engine.animation.frames[nextFrame].sprite_id;
 		engine.sprite = engine.animation.sprites[sprite_id];
+		engine.current_frame = nextFrame;
 	}
+	//printf("l/current %d %d %lf %lf\n", engine.current_frame, engine.animation.frame_count, engine.animation.duration, engine.time);
 
 	Vector2 enginePos = position;
 	DrawSpriteRotated(engine.sprite,enginePos,rotation,scaleFactor);

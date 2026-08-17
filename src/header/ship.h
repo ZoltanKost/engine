@@ -2,17 +2,17 @@
 #define SHIP
 #include "bullet.h"
 
-#define ship_flag_active 	 1
-#define ship_flag_move 		 1 << 1
-#define ship_flag_rotate     1 << 2
-#define ship_flag_shoot 	 1 << 3
-#define ship_flag_destroy 	 1 << 4
-#define ship_flag_reset 	 1 << 6
-#define ship_flag_remove 	 1 << 7
+#define ship_flag_active 	 (1     ) // 1
+#define ship_flag_move 		 (1 << 1) // 2
+#define ship_flag_rotate     (1 << 2) // 4
+#define ship_flag_shoot 	 (1 << 3) // 8
+#define ship_flag_destroy 	 (1 << 4) // 16
+#define ship_flag_reset 	 (1 << 6) // 64
+#define ship_flag_remove 	 (1 << 7) // -128
 
-#define ship_state_idle      0
-#define ship_state_shooting  1
-#define ship_state_destroy 	 1 << 7
+#define ship_state_idle      (0)
+#define ship_state_shooting  (1)
+#define ship_state_destroy 	 (1 << 7)
 
 
 typedef struct Engine //88 byte

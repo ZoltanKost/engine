@@ -11,12 +11,13 @@ Gameplay:
 
 
 Engine:
-- process engine animation properly
-- create button for choosing an animation event
-- create button for close window and attach it to the corner of anim window
+- text rendering when camera moving isn't displayed properly
+- fixed ui layout
+- add camera position to the screenInput to not recalculate draw_rect
+- refactor ui 
 - create scroll window with all animations
-- rendering a string into a window
 - draw children without alingment respectively 
+- refactor ui
 - Modules instead of objects??
 - list of existing animations
 - create new animation button
@@ -24,6 +25,7 @@ Engine:
 - attached animation event shown at runtime
 - drawing module
 - refactor engine.c
+- object rotation as euler now - should change to matrix? 
 - animation and spritesallocations localization
 - sound
 - Create collider from prefab

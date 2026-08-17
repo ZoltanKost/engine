@@ -24,6 +24,7 @@ int main(){
 	int MaxCount = 32;
 	
 	Texture2D space_stars = LoadTexture("resources/Stars.png");
+	printf("First texture: %d\n", space_stars.id);
 	Texture2D space_dust = LoadTexture("resources/Dust.png");
 	Texture2D space_nebulae = LoadTexture("resources/Nebulae.png");
 	
