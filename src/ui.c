@@ -95,7 +95,7 @@ ui_element create_ui_element_raw_rect(Rectangle rect, Color color, char flags, c
 	return create_ui_element(rect, (Sprite) {0}, color, flags | ui_flag_rawRect, children_flags, layout_flags, 0);
 }
 
-ui_element create_ui_element_label(Rectangle rect, Color color, char layout_flags, char ** text)
+ui_element create_ui_element_label(Rectangle rect, Color color, char layout_flags, char * text)
 {
 	ui_element result = create_ui_element(
 		rect, ui_empty_sprite, 
@@ -104,7 +104,7 @@ ui_element create_ui_element_label(Rectangle rect, Color color, char layout_flag
 	result.text = text;
 	return result;
 }
-ui_element create_ui_element_button(Rectangle rect, Sprite sprite, Color color, char flags, char layout_flags, void (*callback)(int), char** text)
+ui_element create_ui_element_button(Rectangle rect, Sprite sprite, Color color, char flags, char layout_flags, void (*callback)(int), char* text)
 {
 	ui_element result = create_ui_element(rect, sprite, color, flags | ui_flag_button, layout_null, layout_flags, callback);
 	result.text = text;
@@ -190,7 +190,7 @@ void calculate_ui_positions(ui_element_datas* UIdata, Camera2D cam)
 					if(dirty) data[i].rect.y += (parent.rect.height / (parent.childrenCount + 1) *
 								(element.number_in_children + 1)) - element.rect.height * 0.5f;
 				break;
-				case layout_row:
+				case layout_rowX:
 				/*
 					draw_rect.x += (parent.rect.width / (parent.childrenCount + 1) *
 								element.number_in_children) - element.rect.width * 0.5f;
@@ -204,6 +204,20 @@ void calculate_ui_positions(ui_element_datas* UIdata, Camera2D cam)
 						if(dirty) data[i].rect.x += data[child_id].rect.width;
 					}
 				break;
+				case layout_rowY:
+				/*
+					draw_rect.x += (parent.rect.width / (parent.childrenCount + 1) *
+								element.number_in_children) - element.rect.width * 0.5f;
+					if(dirty) data[i].rect.x += (parent.rect.width / (parent.childrenCount + 1) *
+								element.number_in_children) - element.rect.width * 0.5f;
+					break;*/
+					for(int k = 0; k < element.number_in_children; k++)
+					{
+						int child_id = parent.childrenID[k];
+						draw_rect.y += data[child_id].rect.height;
+						if(dirty) data[i].rect.y += data[child_id].rect.height;
+					}
+				break;
 			}
 		}
 		if(dirty) printf("dirty updated: %f, %f \n", data[i].rect.x, data[i].rect.y);
@@ -211,7 +225,7 @@ void calculate_ui_positions(ui_element_datas* UIdata, Camera2D cam)
 		data[i].draw_rect = draw_rect;
 	}
 }
-
+// todo: draw_rect as separate rect array
 void draw_ui(ui_element_datas* UIdata, Camera2D cam)
 {
 	int firstInactive = UIdata->firstInactive;
@@ -233,8 +247,7 @@ void draw_ui(ui_element_datas* UIdata, Camera2D cam)
 		}
 		if(el.flags & ui_flag_text) 
 		{
-			char* text = *el.text;
-			DrawText(text, el.draw_rect.x, el.draw_rect.y, standardFontSize, GREEN);
+			DrawText(el.text, el.draw_rect.x, el.draw_rect.y, standardFontSize, GREEN);
 		}
 	}
 }
