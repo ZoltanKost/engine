@@ -1,3 +1,6 @@
+#ifndef ANIM_EDITOR
+#define ANIM_EDITOR
+
 #include "ui.h"
 #include "raylib.h"
 #include "animation.h"
@@ -16,3 +19,10 @@ int InitEditAnimationWindow(FrameAnimation editingAnimation,
 int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
 							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas);
 void SwitchEditingAnimationFlag(int id);
+
+void change_frame_attached_events(int id);
+void choose_frame_to_edit(int id);
+void init_frame_attached_events();
+void update_frame_attached_events();
+
+#endif

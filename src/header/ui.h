@@ -44,7 +44,7 @@ typedef struct ui_element
 	Color color;
 	Sprite sprite;
 	char* text;
-	void (*callback)(int);
+	void (*callback)(int);		// callback returns index in parent's children for now.
 	int layer;
 	char children_layout;
 	char layout_flags;

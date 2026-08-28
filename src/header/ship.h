@@ -6,9 +6,12 @@
 #define ship_flag_move 		 (1 << 1) // 2
 #define ship_flag_rotate     (1 << 2) // 4
 #define ship_flag_shoot 	 (1 << 3) // 8
-#define ship_flag_destroy 	 (1 << 4) // 16
 #define ship_flag_reset 	 (1 << 6) // 64
 #define ship_flag_remove 	 (1 << 7) // -128
+
+extern const int ship_event_count;
+extern const int ship_events[];
+extern const char* ship_event_strings[];
 
 #define ship_state_idle      (0)
 #define ship_state_shooting  (1)

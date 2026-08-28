@@ -1,6 +1,10 @@
 #include "ship.h"
 
-float engine_update_time = 1.0f;
+static float engine_update_time = 1.0f;
+
+const int ship_event_count = 3; // this is required for animation editing. every entity has its events count and array of values(flags) which corresponds to an event.
+const int ship_events[] = {ship_flag_shoot, ship_flag_reset, ship_flag_remove};
+const	char* ship_event_strings[] = {"ship_flag_shoot", "ship_flag_reset", "ship_flag_remove"};
 
 ShipDatas InitShips(int initCount)
 {
@@ -102,7 +106,7 @@ void ProcessState(ShipDatas* shipData, BulletDatas* bulletDatas)
 		if(ship.flags & ship_flag_reset) 
 		{
 			printf("resetted state %d state: %d \n", ship.id, ship.state);
-			ship.state = 0;
+			ship.state = 0; // todo: probably doesn't play animation to the end
 			ship.flags ^= ship_flag_reset;
 		}
 		switch(ship.state)
@@ -220,7 +224,7 @@ void ProcessMovement(ShipDatas* shipData, float dt, float scaleFactor)
 		Ship ship = ships[i];
 		if((ship.flags & ship_flag_move) && (ship.flags & ship_flag_active))
 		{
-			if(!(ship.flags & ship_flag_rotate))
+			if(!(ship.flags & ship_flag_rotate)) // ship is poining the target and doesn't need to rotate
 			{
 				Vector2 moveVector = {ship.lookDirection.x * ship.moveSpeed * dt,
 									ship.lookDirection.y * ship.moveSpeed * dt};
@@ -241,9 +245,9 @@ void ProcessRotation(ShipDatas* shipData, float dt)
 	{
 		if(!(ships[i].flags & ship_flag_rotate)) continue;
 		
-		if(NormalizedDifferenceLength(ships[i].targetDirection, ships[i].lookDirection) < 0.01f)
+		if(LengthSqrOfDifference(ships[i].targetDirection, ships[i].lookDirection) < 0.01f)
 		{
-			ships[i].flags = ships[i].flags ^ ship_flag_rotate;
+			ships[i].flags = ships[i].flags ^ ship_flag_rotate; // ship is pointnig target, don't need to rotate anymore.
 			continue;
 		}
 		/*

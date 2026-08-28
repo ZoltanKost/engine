@@ -127,24 +127,7 @@ int main(){
 		spawn += dt;
 
 		bool mousePressed = IsMouseButtonPressed(0);
-		if(IsKeyPressed(KEY_ONE))
-		{
-			SwitchEditingAnimationFlag(0);
-		}
-		if(IsKeyDown(KEY_TWO))
-		{
-			//WriteFrameAnimationToFile(editingAnimation, editingAnimationPath);
-		}
-		if(IsKeyDown(KEY_THREE))
-		{
-			editingAnimation = ship.animations[2];
-			ReInitEditAnimationWindowWithNewAnimation(editingAnimation, 
-							&editing_frame_count, 0, &uiDatas);
-		}
-		if(IsKeyDown(KEY_FOUR))
-		{
-			datas.data[playerShip].state = ship_state_destroy;
-		}
+
 		if(mousePressed)
 		{
 			CastUI(mousePos, uiDatas);
@@ -306,7 +289,7 @@ void DrawBackgroundParallax(Camera2D camera, Vector2 speed, int width, int heigh
 	DrawTexturePro(texture2, backgroundRect, nebulaeRect, vector2_zero, 0.0f, WHITE);
 	DrawTexturePro(texture1, backgroundRect, dustRect, vector2_zero, 0.0f, WHITE);
 }
-
+// todo: refactor; probably has to be moved to ui
 void CastUI(Vector2 mousePos, ui_element_datas uiDatas)
 {
 		ui_cast_result uiInput = {-1,-1};
@@ -316,7 +299,7 @@ void CastUI(Vector2 mousePos, ui_element_datas uiDatas)
 			int number_in_children = uiDatas.data[uiInput.id].number_in_children;
 			if(uiInput.flags & ui_flag_button && uiDatas.data[uiInput.id].callback != 0)
 			{
-				uiDatas.data[uiInput.id].callback(number_in_children - 1);
+				uiDatas.data[uiInput.id].callback(number_in_children); // todo: change what to return based on flags/parent flags
 			}
 			//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames, (int)datas.data[0].animations[2].frames, (int)datas.data[1].animations[2].frames);
 			//printf("edit: %d ship[0]: %d ship[1] %d\n", (int)editingAnimation.frames[number_in_children - 1].event, (int)datas.data[0].animations[2].frames[number_in_children - 1].event, (int)datas.data[1].animations[2].frames[number_in_children - 1].event);

@@ -11,12 +11,12 @@ Gameplay:
 
 
 Engine:
-- marks that there are a list of animation events on the frame
-- list which events are there on the frame
+- save/load animations
+- reinit animation redactor with a new animation
 - play animation during redacting it
 - text rendering when camera moving isn't displayed properly
 - add camera position to the screenInput to not recalculate draw_rect
-- refactor ui 
+- refactor ui
 - create scroll window with all animations
 - draw children without alingment respectively ??
 - list of existing animations
@@ -24,6 +24,7 @@ Engine:
 - animation choose at runtime
 - import and animation creation via ui
 - attached animation event shown at runtime
+- Ship movement as drifting. current implementation is classic, but really boring
 - drawing module
 - refactor engine.c
 - object rotation as euler now - should change to matrix? 

@@ -19,8 +19,18 @@ static int chosen_events_window_id = -1;
 
 static char* chosen_animation_flag_string = "test";
 static char* switch_animation_flag_string= "switch";
+static int events_fields_id = -1;
+static int frame_events_parent = -1;
 
 static int chosen_anim_flag_string_label = 0; // id of label with chosen anim flag
+
+static int entity_anim_event_count = 0;
+static int current_event_index = 0;
+
+static int current_editing_frame = 0;
+
+static int* entitiy_anim_events;// readonly
+static char** entity_anim_events_strings; // readonly
 void AddFrameToEditingAnimation(int paramsCount)
 {
 	// TODO: allocations
@@ -29,42 +39,12 @@ void AddFrameToEditingAnimation(int paramsCount)
 	editing_animation.frames = MemRealloc(editing_animation.frames, editing_animation.frame_count++);
 }
 
-void AddEventToEditingAnimation(int frameNumber)
+void AddEventToEditingAnimation(int eventNumber)
 {
     //printf("frames:%d number:%d", (int)editing_animation.frames, frameNumber);
-	editing_animation.frames[frameNumber].event ^= current_event_animation_flag;
-	printf("for frame %d added event %d \n",frameNumber,current_event_animation_flag);
-}
-
-void SwitchEditingAnimationFlag(int id)
-{
-    do
-    {
-        if(current_event_animation_flag & ship_flag_remove)
-        {
-            current_event_animation_flag = ship_flag_shoot;
-			break;
-        }
-        current_event_animation_flag <<= 1;
-    }while(!((current_event_animation_flag & ship_flag_reset) // 64 
-        || (current_event_animation_flag & ship_flag_shoot) // 8
-        || (current_event_animation_flag & ship_flag_remove))); // -128
-	switch(current_event_animation_flag)
-	{
-		case ship_flag_reset:
-			chosen_animation_flag_string = "Reset";
-			printf("event changed: %s\n",chosen_animation_flag_string); // TODO here set the image of animation?
-			break;
-		case ship_flag_shoot:
-			chosen_animation_flag_string = "Shoot";
-			printf("event changed: %s\n",chosen_animation_flag_string);
-			break;
-		case -(ship_flag_remove):								// char c = 128 wrapped to -127
-			chosen_animation_flag_string = "Remove";
-			printf("event changed: %s\n",chosen_animation_flag_string);
-			break;
-	}
-    printf("flag: %d\n", current_event_animation_flag);
+	editing_animation.frames[current_editing_frame].event ^= entitiy_anim_events[eventNumber];
+	update_frame_attached_events();
+	printf("for frame %d added event %d \n",current_editing_frame,entitiy_anim_events[eventNumber]);
 }
 
 void CloseEditAnimationWindow(int param)
@@ -86,6 +66,11 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 {
 	ui_data_array = uiDatas;
     editing_animation = _editing_animation;
+
+	entitiy_anim_events = ship_events; // todo: change dependent on which entity is being editing
+	entity_anim_events_strings = ship_event_strings;
+	entity_anim_event_count = ship_event_count;
+	current_editing_frame = 0;
 	// TODO: implement parenting
 	if(parentID != 0) 
 	{
@@ -94,6 +79,7 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 	}
 	Rectangle	animesior_window_position = {0,SCREEN_HEIGHT - SCREEN_HEIGHT/4,SCREEN_WIDTH,SCREEN_HEIGHT/4};
 	Rectangle animeditor_body_position = {SCREEN_WIDTH / 6,0,SCREEN_WIDTH * 4 / 6,SCREEN_HEIGHT/4};
+	
 	int animeditor_main_background;
 	// background and button to open/ close
 {
@@ -126,7 +112,8 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 
 	// TODO: create scroll window with all animations
 }
-	int frame_events_parent;
+	
+	frame_events_parent;
 	int frame_sprites_parent;
 	// Construct parent for events and buttons
 {
@@ -140,6 +127,7 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 	//el1.rect.y += el1.rect.height * 2;
 	frame_sprites_parent = add_ui_element(uiDatas,bkg_parent,animeditor_main_background); // parent for sprites
 }
+	
 	ui_element sprite_button;
 	ui_element event_button_el;
 	// Create buttons for sprites and events
@@ -157,9 +145,7 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 	event_button_el = 
 		create_ui_element_button(button_rect, ui_empty_sprite, LIGHTGRAY,
 							ui_flag_rawRect, layout_null,
-							AddEventToEditingAnimation, ui_null_text); // ui Button // todo: change from adding event directly to opening add event window
-	
-	
+							choose_frame_to_edit, ui_null_text); // ui Button // todo: change from adding event directly to opening add event window
 }
 	// for each frame, create an instance of buttons
 	for(int i = 0; i < editing_animation.frame_count; i++)
@@ -171,7 +157,6 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 		int sprite_button_id = add_ui_element(uiDatas,sprite_button,frame_sprites_parent);
 	}
 
-	int events_fields_id;
 	int events_buttons_id;
 	//create another block for ui event data editing
 {
@@ -196,19 +181,22 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 		ui_flag_null);
 
 	
-	events_fields_id = add_ui_element(uiDatas,events_fields,events_field_id); // 
+	events_fields_id = add_ui_element(uiDatas,events_fields,events_field_id); // events parent
 	events_buttons_id = add_ui_element(uiDatas,events_buttons,events_field_id); // 
 }
-	ui_element choose_event_button_el = 
+	init_frame_attached_events();
+
+	//add_ui_element(uiDatas,event_button,events_fields_id); 
+	/*ui_element choose_event_button_el = 
 		create_ui_element_button(ui_rect(50,60), ui_empty_sprite, LIGHTGRAY,
 							ui_flag_rawRect | ui_flag_text, layout_null,
-							SwitchEditingAnimationFlag, switch_animation_flag_string);
+							change_frame_attached_events, switch_animation_flag_string);
 	add_ui_element(uiDatas,choose_event_button_el,events_buttons_id); // todo: change to flag which event is enabled?
 	
 	ui_element label = create_ui_element_label((Rectangle){0,0,50,50}, LIGHTGRAY,  layout_null, chosen_animation_flag_string); 
 
 	chosen_anim_flag_string_label = add_ui_element(uiDatas, label, events_buttons_id); // label with textwhich event is chosen 
-
+	*/
 	// todo add animation disk save functionality
 
 	*editing_frame_count = editing_animation.frame_count;
@@ -216,9 +204,73 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 	return animeditor_window_parent;
 }
 
-void open_event_change_window()
+void init_frame_attached_events()
 {
+	
+	// todo: generalize
+	ui_element event_button  = create_ui_element_button(
+		ui_rect(SCREEN_WIDTH*2/9,30),
+		ui_empty_sprite, RED, 
+		ui_flag_text, layout_null, 
+		AddEventToEditingAnimation, "");
 
+	for(int i = 0; i < entity_anim_event_count; i++)
+	{
+		event_button.text = entity_anim_events_strings[i];
+		char event_active = entitiy_anim_events[i] & editing_animation.frames[current_editing_frame].event;
+		event_button.color = event_active? GREEN : RED;
+		add_ui_element(ui_data_array,event_button,events_fields_id); 
+	}
+}
+
+void update_frame_attached_events()
+{
+	for(int i = 0; i < entity_anim_event_count; i++)
+	{
+		ui_element parent = ui_data_array->data[events_fields_id];
+
+		int update_id = parent.childrenID[i];
+		ui_element elemnt_to_update = ui_data_array->data[update_id];
+
+		elemnt_to_update.text = entity_anim_events_strings[i];
+		
+		char event_active = entitiy_anim_events[i] & editing_animation.frames[current_editing_frame].event;
+		elemnt_to_update.color = event_active? GREEN : RED;
+
+		ui_data_array->data[update_id] = elemnt_to_update;
+	}
+}
+
+void choose_frame_to_edit(int id)
+{
+	int old_id = ui_data_array->data[frame_events_parent].childrenID[current_editing_frame]; // todo this one is somehow choosing the wrong button
+
+	ui_data_array->data[old_id].color = LIGHTGRAY; // deselect old selection
+
+	current_editing_frame = id;
+
+	int new_id = ui_data_array->data[frame_events_parent].childrenID[current_editing_frame];
+
+	ui_data_array->data[new_id].color = GREEN;	// select new frame to edit
+
+	update_frame_attached_events();
+	printf("Editing frame: %d\n", id);
+}
+
+void change_frame_attached_events(int id)
+{
+	current_event_index++;
+
+	if (current_event_index >= entity_anim_event_count)
+	{
+		current_event_index = 0;
+	}
+
+	current_event_animation_flag = entitiy_anim_events[current_event_index];
+	chosen_animation_flag_string = entity_anim_events_strings[current_event_index];
+
+	printf("event changed: %s, count: %d, current: %d\n",chosen_animation_flag_string, entity_anim_event_count, current_event_index); // TODO here set the image of animation?
+    printf("flag: %d\n", current_event_animation_flag);
 }
 
 void saveEditedAnimation()

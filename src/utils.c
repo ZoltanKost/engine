@@ -41,7 +41,7 @@ Vector2 Vector2NormalizedSlerp(Vector2 v1, Vector2 v2, float a)
 	return Vector2Normalize(Vector2Add(v1,v2));
 }
 
-float NormalizedDifferenceLength(Vector2 v1, Vector2 v2)
+float LengthSqrOfDifference(Vector2 v1, Vector2 v2)
 {
 	Vector2 diff = Vector2Subtract(v1,v2);
 	float l = Vector2LengthSqr(diff);

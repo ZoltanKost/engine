@@ -247,7 +247,7 @@ void draw_ui(ui_element_datas* UIdata, Camera2D cam)
 		}
 		if(el.flags & ui_flag_text) 
 		{
-			DrawText(el.text, el.draw_rect.x, el.draw_rect.y, standardFontSize, GREEN);
+			DrawText(el.text, el.draw_rect.x, el.draw_rect.y, standardFontSize, BLACK);
 		}
 	}
 }
