@@ -1,5 +1,7 @@
 #include "engine.h"
 
+const EXISTING_ENTITIES_COUNT = 1;
+
 int main(){
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE & FLAG_WINDOW_ALWAYS_RUN & FLAG_FULLSCREEN_MODE);
@@ -41,23 +43,21 @@ int main(){
 
 	//DetectRectangle(image);
 	
-	Ship ship = CreateShipLoadAnimations("resources/BasicShip/BasicShip.png",
-								"resources/BasicShip/BasicShip_Weapons.png",
-								"resources/BasicShip/BasicShip_Destruction.png",
-								"resources/BasicShip/BasicShip_Engine.png",
-								"resources/BasicShip/Bullet.png",
-								NULL,
-								"ship_animation1.anim",
-								NULL,
+	Ship ship = CreateShipLoadAnimations("resources/Scout/Scout.png",
+								"resources/Scout/Scout_Weapons.png",
+								"resources/Scout/Scout_Destruction.png",
+								"resources/Scout/Scout_Engine.png",
+								"resources/Scout/Bullet.png",
+								get_animation_name(0),
+								get_animation_name(1),
+								get_animation_name(2),
 								4, 850,1.5f,
 				 				shipSpeed, 1);
  
-	/*Ship fighter = CreateShip(fighting_ship_Texture, fighting_ship_ShootTexture,
-				 			fighting_ship_DestructionTexture, fighting_ship_engineTexture,bulletToSpawn,
-				 			shipSpeed, 1, vector2_zero);
+	//Ship fighter = CreateShipLoadAnimations();
 	
 
-	Ship asteroid = CreateShip(asteroid_texture, nullTexture,
+	/*Ship asteroid = CreateShip(asteroid_texture, nullTexture,
 				 			nullTexture, nullTexture,bulletToSpawn,
 				 			0, 2, vector2_zero);*/
 

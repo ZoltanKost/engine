@@ -1,6 +1,11 @@
 #ifndef SHIP
 #define SHIP
+#include <stdio.h>
 #include "bullet.h"
+/*
+    before change: has to be also be IDENTICAL in ship.c
+*/
+#define ship_entity_base
 
 #define ship_flag_active 	 (1     ) // 1
 #define ship_flag_move 		 (1 << 1) // 2
@@ -9,9 +14,16 @@
 #define ship_flag_reset 	 (1 << 6) // 64
 #define ship_flag_remove 	 (1 << 7) // -128
 
+
+#define ship_mask_event_flags (ship_flag_shoot|ship_flag_reset|ship_flag_remove) 
+
 extern const int ship_event_count;
 extern const int ship_events[];
 extern const char* ship_event_strings[];
+
+extern const char* ship_animation_names[];
+
+extern const EXISTING_ENTITIES_COUNT;
 
 #define ship_state_idle      (0)
 #define ship_state_shooting  (1)
@@ -59,20 +71,26 @@ void ProcessShips(ShipDatas* shipData, BulletDatas* bulletData, float dt,int sca
 
 void ProcessEngine(Vector2 position, float rotation, Engine* engin, float dt, int scaleFactor);
 
-Ship CreateShipLoadAnimations(char* base_texture_path,
-								char* shoot_texture_path,
-								char* destruction_texture_path,
-								char* engine_texture_path,
-								char* bullet_texture_path, 
-								char* base_animation_path,
-								char* shooting_animation_path,
-								char* destruction_animation_path,
+Ship CreateShipLoadAnimations(  const char* base_texture_path,
+								const char* shoot_texture_path,
+								const char* destruction_texture_path,
+								const char* engine_texture_path,
+								const char* bullet_texture_path, 
+								const char* base_animation_path,
+								const char* shooting_animation_path,
+								const char* destruction_animation_path,
 								int bulletFrameCount, 
 								float bulletSpeed, 
 								float bulletLifeTime,
 				 				float speed, int team);
-
-
+const char* get_animation_name(int id);
+const char* get_ship_type(int id);
+FrameAnimation* get_animation_array_of(int id);
+void ShipInitAnimations(int entity_type, Texture2D shipTexture, 
+	Texture2D shipShootTexture, Texture2D shipDestructionTexture,
+	const char* base_animation_path, 
+    const char* shooting_animation_path, 
+    const char* destruction_animation_path);
 void        RemoveShip(ShipDatas* ships, int id);
 void        RemoveUnactiveShips(ShipDatas* shipData);
 void        ProcessRotation(ShipDatas* shipData, float dt);

@@ -15,7 +15,7 @@ typedef struct Frame
 {
 	float time; // 4b
 	Vector2 position; // 8b
-	int sprite_id; // 4 byte
+	int sprite_id; // 4 byte // todo: requires more space, refactor
 	float rotation; // 4 byte
 	char event; // 1 byte
 } Frame;

@@ -1,5 +1,5 @@
 #include "animation.h"
-
+//todo: clean up
 FrameAnimation * FrameAnimationArray;
 static anim_capacity = 0;
 static anim_length = 0;
@@ -49,8 +49,9 @@ bool ReadFrameAnimation(char* filename, FrameAnimation* animation)
 	printf("reading animation %d %.5f\n", animation->frame_count, animation->duration);
 	
 	fread(animation->frames,sizeof(Frame) * animation->frame_count,1,file_ptr);			
-
+	printf("reading sprites\n");
 	fread(animation->sprites,sizeof(Sprite) * animation->frame_count,1,file_ptr);			
+	printf("animation read\n");
 
 	fclose(file_ptr);
 	return 1;

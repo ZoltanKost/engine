@@ -57,9 +57,11 @@ int add_ui_element(ui_element_datas* data, ui_element element, int parentID)
 	ui_elements[result_id] = element;
 	printf("added el %d, flags: %d parent: %d \n", result_id, element.flags, parentID);
 
+	printf("allocating children 8");
+	ui_elements[result_id].childrenID = MemAlloc(8 * sizeof(int));
+
 	// Then, assigned element from the array to the parents children
 	// todo: refactor so it doesn't look fucking ugly and unreadable
-	// todo: mark elements as dirty
 	if(parentID > -1)
 	{
 		ui_element parent = ui_elements[parentID];
@@ -69,15 +71,26 @@ int add_ui_element(ui_element_datas* data, ui_element element, int parentID)
 			ui_elements[parentID].childrenCount++;
 		}else{ // resize and add
 			printf("reallocating: %d %d %d \n", parentID, ui_elements[parentID].childrenCount, ui_elements[parentID].childrenCapacity);
-			ui_elements[parentID].childrenID = 
-				MemRealloc(ui_elements[parentID].childrenID, 
-					parent.childrenCapacity*2*(sizeof(int)));
-			printf("reallocating\n");
+			printf("allocating: %x, %zd",(unsigned int)ui_elements[parentID].childrenID, parent.childrenCapacity*2*sizeof(int));
+			 
+			int* ptr_new = MemRealloc(ui_elements[parentID].childrenID, 
+					parent.childrenCapacity*2*sizeof(int));
+
+			ui_elements[parentID].childrenID = ptr_new;
+
+			if(ui_elements[parentID].childrenID == 0) 
+			{
+				printf("ERROR allocating: %x, %zd", (unsigned int)ui_elements[parentID].childrenID, parent.childrenCapacity*2*sizeof(int));
+				return -1;
+			}
 			ui_elements[parentID].childrenCapacity*=2;
-			ui_elements[parentID].childrenID[ui_elements[parentID].childrenCount++] = result_id;
+			printf("reallocated\n");
+			ui_elements[parentID].childrenID[ui_elements[parentID].childrenCount++] = result_id; // todo: refactor
 		}
 		
 		printf("child assigned\n");
+		
+		
 		ui_elements[result_id].parentID = parentID;
 		ui_elements[result_id].layout_flags |= parent.children_layout;
 		// TODO: should update ALL numbers in ALL children.  ??
@@ -134,7 +147,6 @@ ui_element create_ui_element(Rectangle rect, Sprite sprite, Color color, char fl
 	result.layout_flags = layout_flags;
 	result.parentID = -1;
 	result.childrenCapacity = 8;
-	result.childrenID = MemAlloc(8 * sizeof(int*));
 	result.callback = callback;
 	if(!flags & ui_flag_rawRect)
 	{
@@ -153,7 +165,7 @@ void calculate_ui_positions(ui_element_datas* UIdata, Camera2D cam)
 		
 		ui_element element = data[i];
 		
-		if(!element.flags & ui_flag_active) continue;
+		if(!(element.flags & ui_flag_active)) continue;
 
 		char dirty = element.flags & ui_flag_dirty;
 
@@ -200,6 +212,7 @@ void calculate_ui_positions(ui_element_datas* UIdata, Camera2D cam)
 					for(int k = 0; k < element.number_in_children; k++)
 					{
 						int child_id = parent.childrenID[k];
+						if(!(data[child_id].flags & ui_flag_active)) continue;
 						draw_rect.x += data[child_id].rect.width;
 						if(dirty) data[i].rect.x += data[child_id].rect.width;
 					}
@@ -214,6 +227,7 @@ void calculate_ui_positions(ui_element_datas* UIdata, Camera2D cam)
 					for(int k = 0; k < element.number_in_children; k++)
 					{
 						int child_id = parent.childrenID[k];
+						if(!(data[child_id].flags & ui_flag_active)) continue;
 						draw_rect.y += data[child_id].rect.height;
 						if(dirty) data[i].rect.y += data[child_id].rect.height;
 					}
@@ -320,7 +334,7 @@ void remove_ui_element(ui_element_datas* ui_elements, int id)
 	int childrenCount = removeElement.childrenCount;
 	data[id].flags ^= ui_flag_active;
 }
-// 
+// sets flag & ui_flag_active = 0 and does the same for all the children
 void deactivate_ui_element(ui_element_datas* ui_elements, int id)
 {
 	ui_element* data = ui_elements->data;
@@ -335,7 +349,7 @@ void deactivate_ui_element(ui_element_datas* ui_elements, int id)
 	data[id].flags ^= ui_flag_active;
 	for(int i = 0; i < childrenCount; i++)
 	{
-		printf("child: %d\n", removeChildren[i]);
+		//printf("child: %d\n", removeChildren[i]);
 		deactivate_ui_element(ui_elements, removeChildren[i]);
 	}
 	printf("deactivated ui element: %d\n", id);

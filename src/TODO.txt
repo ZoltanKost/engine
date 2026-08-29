@@ -11,9 +11,13 @@ Gameplay:
 
 
 Engine:
-- save/load animations
-- reinit animation redactor with a new animation
+- entity types and corresponding events and animations management
+- probably name of the animation as a part of a FrameAnimation struct
+- entity choosing in animation editing
+- feddback animation was changed
 - play animation during redacting it
+- shoot spots editing mode 
+- reset flag should be played at the end of the frame
 - text rendering when camera moving isn't displayed properly
 - add camera position to the screenInput to not recalculate draw_rect
 - refactor ui

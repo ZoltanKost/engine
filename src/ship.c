@@ -4,7 +4,25 @@ static float engine_update_time = 1.0f;
 
 const int ship_event_count = 3; // this is required for animation editing. every entity has its events count and array of values(flags) which corresponds to an event.
 const int ship_events[] = {ship_flag_shoot, ship_flag_reset, ship_flag_remove};
-const	char* ship_event_strings[] = {"ship_flag_shoot", "ship_flag_reset", "ship_flag_remove"};
+const char* ship_event_strings[] = {"ship_flag_shoot", "ship_flag_reset", "ship_flag_remove"};
+
+static const int SHIP_TYPE_COUNT = 2;
+static int ship_types = 0; 
+const char* ship_type_strings[] = {"BasicShip", "ERROR1", "ERROR2"};
+static FrameAnimation* entity_animation_array[2];
+const char* ship_animation_names[] = {"idle", "shoot", "destroy"};
+
+#define ENTITY_SHIP_ID_SCOUT 	0
+
+#define ANIMATION_SCOUT_IDLE 	0
+#define ANIMATION_SCOUT_SHOOT 	1
+#define ANIMATION_SCOUT_DESTROY 2
+
+#define ENTITY_SHIP_ID_FIGHTER 	1
+
+#define ANIMATION_FIGHTER_IDLE 		0
+#define ANIMATION_FIGHTER_SHOOT 	1
+#define ANIMATION_FIGHTER_DESTROY 	2
 
 ShipDatas InitShips(int initCount)
 {
@@ -14,6 +32,66 @@ ShipDatas InitShips(int initCount)
 	result.firstInactiveShip = 0;
 	return result;
 	//ships[0] = CreatePlayerShip();
+}
+
+const char* get_animation_name(int id)
+{
+	return ship_animation_names[id];
+}
+
+const char* get_ship_type(int id)
+{
+	return ship_type_strings[id];
+}
+
+FrameAnimation* get_animation_array_of(int id)
+{
+	return entity_animation_array[id];
+}
+
+void ShipInitAnimations(int entity_type, Texture2D shipTexture, 
+	Texture2D shipShootTexture, Texture2D shipDestructionTexture,
+	const char* base_animation_path, 
+	const char* shooting_animation_path, 
+	const char* destruction_animation_path)
+{
+	FrameAnimation* animation_array = MemAlloc(3 * sizeof(FrameAnimation));
+	
+	FrameAnimation ship_animation = CreateFrameAnimationFromTexture(
+		shipTexture,
+		0.5f, (Vector2){0.5f,0.5f},
+		64, 64);
+	animation_array[0] = ship_animation;
+	if(base_animation_path != 0)
+	{
+		printf("reading idle\n");
+		ReadFrameAnimation(base_animation_path, &animation_array[0]);
+	}
+	
+	FrameAnimation shootAnimation = CreateFrameAnimationFromTexture( // animation needs to be inited first, otherwise the sprite array will be 0
+		shipShootTexture,
+		0.5f, (Vector2){0.5f,0.5f},
+		64, 64);
+	animation_array[1] = shootAnimation;
+	if(shooting_animation_path != 0)
+	{
+		printf("reading shoot\n");
+		ReadFrameAnimation(shooting_animation_path, &animation_array[1]);
+	}
+
+	
+	FrameAnimation destructionAnimation = CreateFrameAnimationFromTexture(
+		shipDestructionTexture,
+		0.75f, (Vector2){0.5f,0.5f},
+		64, 64);
+	animation_array[2] = destructionAnimation;
+	if(destruction_animation_path != 0)
+	{
+		printf("reading destruction\n");
+		ReadFrameAnimation(destruction_animation_path, &animation_array[2]);
+	}
+
+	entity_animation_array[entity_type] = animation_array;
 }
 
 /*void ReplaceShip(ShipDatas* shipData, Ship ship,int id)
@@ -31,6 +109,7 @@ Ship CreateShip(Texture2D shipTexture, Texture2D shipShootTexture,
 	Image image = LoadImageFromTexture(shipTexture);
 	Rectangle ship_collider = DetectCollisionRectangle(image, image.width, image.height);
 	UnloadImage(image);
+	printf("collider created\n");
 	// TODO: Create Engine struct from engine prefab?? prefab
 	Engine engine = {0};
 	if(engineTexture.id != -1){
@@ -40,29 +119,14 @@ Ship CreateShip(Texture2D shipTexture, Texture2D shipShootTexture,
 				engineTexture.height);
 		engine = (Engine){engine_animation,engine_animation.sprites[0],0,0.0f};
 	}
-
+	printf("engine created\n");
 	// Create Ship struct
 	Ship ship = {0};
-	FrameAnimation ship_animation = CreateFrameAnimationFromTexture(
-			shipTexture,
-			0.5f, (Vector2){0.5f,0.5f},
-			64, 64);
-	FrameAnimation shootAnimation = CreateFrameAnimationFromTexture(
-			shipShootTexture,
-			0.5f, (Vector2){0.5f,0.5f},
-			64, 64);
-	FrameAnimation destructionAnimation = CreateFrameAnimationFromTexture(
-			shipDestructionTexture,
-			0.75f, (Vector2){0.5f,0.5f},
-			64, 64);
-	FrameAnimation* anims = MemAlloc(3 * sizeof(FrameAnimation));
-	anims[0] = ship_animation;
-	anims[1] = shootAnimation;
-	anims[2] = destructionAnimation;
 	ship.engine = engine;
 	ship.collider = ship_collider;
-	ship.animations = anims;
-	ship.sprite = anims[1].sprites[0];
+	ship.animations = entity_animation_array[ship_types]; // todo: switch(entity_type)
+	printf("animations assigned\n");
+	ship.sprite = ship.animations->sprites[0];
 	ship.moveSpeed = shipSpeed;
 	
 	CurrentAnimationData animData = {0};
@@ -77,7 +141,7 @@ Ship CreateShip(Texture2D shipTexture, Texture2D shipShootTexture,
 	//bullet.moveSpeed = moveSpeed;
 	bulletToSpawn.team = ship.team;
 	ship.bulletToSpawn = bulletToSpawn;
-
+	printf("ship struct inited");
 	return ship;
 }
 
@@ -353,16 +417,14 @@ void ProcessCollisions(ShipDatas* datas, float scaleFactor)
 	}
 }
 
-// TODO: do not create animations from textures. 
-// Only assign textures to existing sprites .
-Ship CreateShipLoadAnimations(char* base_texture_path,
-								char* shoot_texture_path,
-								char* destruction_texture_path,
-								char* engine_texture_path,
-								char* bullet_texture_path, 
-								char* base_animation_path,
-								char* shooting_animation_path,
-								char* destruction_animation_path,
+Ship CreateShipLoadAnimations(	const char* base_texture_path,
+								const char* shoot_texture_path,
+								const char* destruction_texture_path,
+								const char* engine_texture_path,
+								const char* bullet_texture_path, 
+								const char* base_animation_path,
+								const char* shooting_animation_path,
+								const char* destruction_animation_path,
 								int bulletFrameCount, 
 								float bulletSpeed, 
 								float bulletLifeTime,
@@ -376,42 +438,19 @@ Ship CreateShipLoadAnimations(char* base_texture_path,
 
 	Bullet bulletToSpawn = CreateBullet(bullet_Texture,bulletFrameCount,
 										bulletSpeed,bulletLifeTime);
-
-
-	Ship ship = CreateShip(base_ship_Texture, shooting_ship_Texture,
+	printf("preparing to init animations\n");
+	ShipInitAnimations(ship_types, 
+		base_ship_Texture, shooting_ship_Texture, 
+		destruction_ship_Texture,
+		base_animation_path,
+		shooting_animation_path,
+		destruction_animation_path
+	); // inits this ship's type animations
+	printf("animations inited successfully\n");
+	Ship ship = CreateShip(base_ship_Texture, shooting_ship_Texture, // todo: init engine and bullet just once
 				 destruction_ship_Texture, engine_ship_Texture, bulletToSpawn,
 				 speed, team, vector2_zero);
-
-	if(base_animation_path != 0)  
-	{
-		ReadFrameAnimation(base_animation_path,&ship.animations[0]);
-		int count = ship.animations[0].frame_count;
-		for(int i = 0; i < count; i++)
-		{
-			ship.animations[0].sprites[i].texture = base_ship_Texture;
-		}
-	}
-
-	if(shooting_animation_path != 0)  
-	{
-		ReadFrameAnimation(shooting_animation_path,&ship.animations[1]);
-		int count = ship.animations[1].frame_count;
-		for(int i = 0; i < count; i++)
-		{
-			ship.animations[1].sprites[i].texture = shooting_ship_Texture;
-		}
-	}
-
-	if(destruction_animation_path != 0) 
-	{
-		ReadFrameAnimation(destruction_animation_path,&ship.animations[2]);
-		int count = ship.animations[2].frame_count;
-		for(int i = 0; i < count; i++)
-		{
-			ship.animations[2].sprites[i].texture = destruction_ship_Texture;
-		}
-	}
-
+	ship_types++;
 	return ship;
 }
 

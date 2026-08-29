@@ -21,16 +21,19 @@ static char* chosen_animation_flag_string = "test";
 static char* switch_animation_flag_string= "switch";
 static int events_fields_id = -1;
 static int frame_events_parent = -1;
+static int frame_sprites_parent = -1;
 
 static int chosen_anim_flag_string_label = 0; // id of label with chosen anim flag
 
-static int entity_anim_event_count = 0;
+
+static int current_editing_frame = 0;	// frame, chosen for editing by clicking on the editing button
 static int current_event_index = 0;
 
-static int current_editing_frame = 0;
-
-static int* entitiy_anim_events;// readonly
-static char** entity_anim_events_strings; // readonly
+static int entity_editing = 0;
+static int animation_editing_index = 1;
+static int entity_anim_event_count = 0;	// how much events are there in total for the entity being editing
+static int* entitiy_anim_events;// readonly events of current entity being editing
+static char** entity_anim_events_strings; // readonly events of current entity being editing
 void AddFrameToEditingAnimation(int paramsCount)
 {
 	// TODO: allocations
@@ -70,6 +73,7 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 	entitiy_anim_events = ship_events; // todo: change dependent on which entity is being editing
 	entity_anim_events_strings = ship_event_strings;
 	entity_anim_event_count = ship_event_count;
+	animation_editing_index = 1; // todo: just for now, has actually be decided by caller
 	current_editing_frame = 0;
 	// TODO: implement parenting
 	if(parentID != 0) 
@@ -78,7 +82,7 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 		return -1;
 	}
 	Rectangle	animesior_window_position = {0,SCREEN_HEIGHT - SCREEN_HEIGHT/4,SCREEN_WIDTH,SCREEN_HEIGHT/4};
-	Rectangle animeditor_body_position = {SCREEN_WIDTH / 6,0,SCREEN_WIDTH * 4 / 6,SCREEN_HEIGHT/4};
+	Rectangle animeditor_body_position = {SCREEN_WIDTH / 6,0,SCREEN_WIDTH * 3 / 6,SCREEN_HEIGHT/4};
 	
 	int animeditor_main_background;
 	// background and button to open/ close
@@ -112,9 +116,6 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 
 	// TODO: create scroll window with all animations
 }
-	
-	frame_events_parent;
-	int frame_sprites_parent;
 	// Construct parent for events and buttons
 {
 	ui_element bkg_parent = create_ui_element_raw_rect(
@@ -122,67 +123,42 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 		ui_flag_null, layout_flexibleX_in_parent, layout_null);
 
 	bkg_parent.rect.height /= 4;
-	bkg_parent.rect.width /= 2;
+	//bkg_parent.rect.width /= 2;
 	frame_events_parent = add_ui_element(uiDatas,bkg_parent,animeditor_main_background);  // parent for events
-	//el1.rect.y += el1.rect.height * 2;
 	frame_sprites_parent = add_ui_element(uiDatas,bkg_parent,animeditor_main_background); // parent for sprites
 }
 	
-	ui_element sprite_button;
-	ui_element event_button_el;
-	// Create buttons for sprites and events
-{
-	Rectangle button_rect = {0,0,48,48};
-	//button_rect.y += 40;
-	sprite_button = 
-			create_ui_element_sprite(
-				button_rect, ui_empty_sprite, 
-				LIGHTGRAY,
-				ui_flag_null,
-				layout_null); // sprite button
+	init_event_buttons_and_sprites(editing_animation);
 
-	button_rect = (Rectangle){0,0,8,32};
-	event_button_el = 
-		create_ui_element_button(button_rect, ui_empty_sprite, LIGHTGRAY,
-							ui_flag_rawRect, layout_null,
-							choose_frame_to_edit, ui_null_text); // ui Button // todo: change from adding event directly to opening add event window
-}
-	// for each frame, create an instance of buttons
-	for(int i = 0; i < editing_animation.frame_count; i++)
-	{
-		// todo: color dependent on event presence
-		int event_button = add_ui_element(uiDatas,event_button_el,frame_events_parent);
-		//printf("id: %d flags: %d n: %d \n",event_button,uiDatas.data[event_button].flags, uiDatas->data[event_button].number_in_children );
-		sprite_button.sprite = editing_animation.sprites[i];
-		int sprite_button_id = add_ui_element(uiDatas,sprite_button,frame_sprites_parent);
-	}
-
-	int events_buttons_id;
+	int anim_list_id;
+	int events_field_id;
+	ui_element anim_list;
 	//create another block for ui event data editing
 {
+	int element_width =SCREEN_WIDTH*1/6;
 	ui_element events_field_parent = create_ui_element_raw_rect( // events_parent
-		ui_rect(SCREEN_WIDTH*2/6,SCREEN_HEIGHT/4), 
+		ui_rect(SCREEN_WIDTH*3/6,SCREEN_HEIGHT/4), 
 		GREEN, ui_flag_null,
 		children_layout_rowX,
 		ui_flag_null);
 	
-	int events_field_id = add_ui_element(uiDatas,events_field_parent,animeditor_window_parent);
+	events_field_id = add_ui_element(uiDatas,events_field_parent,animeditor_window_parent);
 
 	ui_element events_fields = create_ui_element_raw_rect( // event names parent
-		ui_rect(SCREEN_WIDTH*2/9,SCREEN_HEIGHT/4), 
+		ui_rect(element_width,SCREEN_HEIGHT/4), 
 		YELLOW, ui_flag_null, 
 		children_layout_rowY, 
 		ui_flag_null);
 
-	ui_element events_buttons = create_ui_element_raw_rect( // event names parent
-		ui_rect(SCREEN_WIDTH*1/9,SCREEN_HEIGHT/4), 
+	anim_list = create_ui_element_raw_rect( // event names parent
+		ui_rect(element_width,SCREEN_HEIGHT/4), 
 		PINK, ui_flag_null, 
 		children_layout_rowY, 
 		ui_flag_null);
 
 	
 	events_fields_id = add_ui_element(uiDatas,events_fields,events_field_id); // events parent
-	events_buttons_id = add_ui_element(uiDatas,events_buttons,events_field_id); // 
+	anim_list_id = add_ui_element(uiDatas,anim_list,events_field_id); // 
 }
 	init_frame_attached_events();
 
@@ -191,25 +167,158 @@ int InitEditAnimationWindow(FrameAnimation _editing_animation,
 		create_ui_element_button(ui_rect(50,60), ui_empty_sprite, LIGHTGRAY,
 							ui_flag_rawRect | ui_flag_text, layout_null,
 							change_frame_attached_events, switch_animation_flag_string);
-	add_ui_element(uiDatas,choose_event_button_el,events_buttons_id); // todo: change to flag which event is enabled?
+	add_ui_element(uiDatas,choose_event_button_el,anim_list_id); // todo: change to flag which event is enabled?
 	
 	ui_element label = create_ui_element_label((Rectangle){0,0,50,50}, LIGHTGRAY,  layout_null, chosen_animation_flag_string); 
 
-	chosen_anim_flag_string_label = add_ui_element(uiDatas, label, events_buttons_id); // label with textwhich event is chosen 
+	chosen_anim_flag_string_label = add_ui_element(uiDatas, label, anim_list_id); // label with textwhich event is chosen 
 	*/
+	// list of animations
+	ui_element animation_button  = create_ui_element_button(
+		ui_rect(SCREEN_WIDTH*1/6,30),
+		ui_empty_sprite, LIGHTGRAY, 
+		ui_flag_text, layout_null, 
+		open_animation_to_edit, "");
+	FrameAnimation* animations = get_animation_array_of(entity_editing);
+	for(int i = 0; i < 3; i++) // todo: ignore idle animation
+	{
+		animation_button.text = ship_animation_names[i];
+		add_ui_element(ui_data_array, animation_button, anim_list_id);
+	}
+	/*// list of entities
+	int entity_list_id = add_ui_element(ui_data_array, anim_list, events_field_id);
+	ui_element entity_button  = create_ui_element_button(
+		ui_rect(SCREEN_WIDTH*1/6,30),
+		ui_empty_sprite, LIGHTGRAY, 
+		ui_flag_text, layout_null, 
+		change_entity_editing, "");
+	
+	char** existing_entities = get_entities_strings();
+	for(int i = 0; i < EXISTING_ENTITIES_COUNT; i++) // todo: ignore idle animation
+	{
+		entity_button.text = existing_entities[i];
+		add_ui_element(ui_data_array, entity_button, entity_list_id);
+	}*/
 	// todo add animation disk save functionality
 
 	*editing_frame_count = editing_animation.frame_count;
 
 	return animeditor_window_parent;
 }
-
-void init_frame_attached_events()
+// todo: assumes there is always 6 animations
+void update_event_buttons_and_sprites(FrameAnimation editing_animation)
 {
 	
+	ui_element parent = ui_data_array->data[frame_events_parent];
+	int i = 0;
+	printf("init already existing buttons\n");
+	for(; i < editing_animation.frame_count && i < parent.childrenCount; i++) // init already existing buttons
+	{
+		printf("%d already exist\n", i);
+		// todo: color dependent on event presence
+		int index = parent.childrenID[i];
+		activate_ui_element(ui_data_array, index);
+
+		int sprite_index = ui_data_array->data[frame_sprites_parent].childrenID[i];
+		ui_data_array->data[sprite_index].sprite = editing_animation.sprites[i];
+		activate_ui_element(ui_data_array, sprite_index);
+	}
+	printf("not exceeds childrenCount => more ui frames active, deactivate ui frames!\n");
+	for(; i < parent.childrenCount; i++) // if not exceeds childrenCount => more ui frames active, deactivate ui frames!
+	{
+		printf("%d is too much\n", i);
+		// todo: color dependent on event presence
+		int index = parent.childrenID[i];
+		deactivate_ui_element(ui_data_array, index);
+
+		int sprite_index = ui_data_array->data[frame_sprites_parent].childrenID[i];
+		deactivate_ui_element(ui_data_array, sprite_index);
+	}
+	
+	printf("not exceeds frameCount => need more ui frames, instantiate!\n");
+	for(; i < editing_animation.frame_count; i++) // if not exceeds frameCount => need more ui frames, instantiate!
+	{
+		printf("%d has not enough frames!\n", i);
+
+		ui_element sprite_button;
+		ui_element event_button_el;
+
+		Rectangle button_rect = {0,0,48,48};
+		//button_rect.y += 40;
+		sprite_button = 
+			create_ui_element_button(
+				button_rect, ui_empty_sprite, 
+				LIGHTGRAY,
+				ui_flag_null,
+				layout_null,choose_frame_to_edit,ui_null_text); // sprite button
+
+		button_rect = (Rectangle){0,0,8,32};
+		event_button_el = 
+		create_ui_element_button(button_rect, ui_empty_sprite, LIGHTGRAY,
+							ui_flag_rawRect, layout_null,
+							choose_frame_to_edit, ui_null_text); // ui Button // todo: change from adding event directly to opening add event window
+	
+		// todo: color dependent on event presence
+		int event_button = add_ui_element(ui_data_array,event_button_el,frame_events_parent);
+		//printf("id: %d flags: %d n: %d \n",event_button,uiDatas.data[event_button].flags, uiDatas->data[event_button].number_in_children );
+		sprite_button.sprite = editing_animation.sprites[i];
+		int sprite_button_id = add_ui_element(ui_data_array,sprite_button,frame_sprites_parent);
+	}
+	
+}
+
+
+void init_event_buttons_and_sprites(FrameAnimation editing_animation)
+{
+	ui_element sprite_button;
+	ui_element event_button_el;
+
+	Rectangle button_rect = {0,0,64,64};
+	//button_rect.y += 40;
+	sprite_button = 
+			create_ui_element_button(
+				button_rect, ui_empty_sprite, 
+				LIGHTGRAY,
+				ui_flag_null,
+				layout_null,choose_frame_to_edit,ui_null_text); // sprite button
+
+	button_rect = (Rectangle){0,0,8,32};
+	event_button_el = 
+		create_ui_element_button(button_rect, ui_empty_sprite, LIGHTGRAY,
+							ui_flag_rawRect, layout_null,
+							choose_frame_to_edit, ui_null_text); // ui Button // todo: change from adding event directly to opening add event window
+	
+							// for each frame, create an instance of buttons
+	for(int i = 0; i < editing_animation.frame_count; i++)
+	{
+		// todo: color dependent on event presence
+		int event_button = add_ui_element(ui_data_array,event_button_el,frame_events_parent);
+		//printf("id: %d flags: %d n: %d \n",event_button,uiDatas.data[event_button].flags, uiDatas->data[event_button].number_in_children );
+		sprite_button.sprite = editing_animation.sprites[i];
+		int sprite_button_id = add_ui_element(ui_data_array,sprite_button,frame_sprites_parent);
+
+		printf("event: %d to %d sprite %d to %d \n", event_button, sprite_button_id,frame_events_parent,frame_sprites_parent);
+	}
+}
+
+void open_animation_to_edit(int id)
+{
+	const char* name = ship_animation_names[animation_editing_index];
+	char path[30];
+	//sprintf(path, "%s",get_ship_type(editing entity id)); // todo: change animation based on which entity type
+	WriteFrameAnimationToFile(editing_animation, name);
+
+	animation_editing_index = id;
+	FrameAnimation* anims = get_animation_array_of(entity_editing);
+	editing_animation = anims[id];
+	reinit_animation_editor(editing_animation);
+}
+// todo: currently editing animations directly, change to  editing_animation
+void init_frame_attached_events()
+{
 	// todo: generalize
 	ui_element event_button  = create_ui_element_button(
-		ui_rect(SCREEN_WIDTH*2/9,30),
+		ui_rect(SCREEN_WIDTH*1/6,30),
 		ui_empty_sprite, RED, 
 		ui_flag_text, layout_null, 
 		AddEventToEditingAnimation, "");
@@ -273,49 +382,12 @@ void change_frame_attached_events(int id)
     printf("flag: %d\n", current_event_animation_flag);
 }
 
-void saveEditedAnimation()
+void reinit_animation_editor(FrameAnimation editing_animation)
 {
-	printf("Error: not implemented yet!");
-}
-int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editing_animation, 
-							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas)
-{
-	printf("Start reinitting frames: %d\n", editing_animation.frame_count);
-	if(existingWindowParent < 0) return -1;
-	ui_element* data = uiDatas->data;
-	int parentID =  existingWindowParent + 2; // ADD NUMBER OF UI ELEMENTS HERE
-	if(editing_animation.frame_count < 1 || data[parentID].childrenCount < 1)
-	{
-		printf("!(editing_animation.frame_count < 1 || data[parentID].childrenCount). create window again\n");
-		return -1;
-	}
-
-	for(int i = 0; i < editing_animation.frame_count; i++)
-	{
-		int buttonID = -1;
-		// TODO: remove out of loop; check lengths
-		if(data[parentID].childrenCount <= i)
-		{
-			printf("Not enough ui elements (bt), resizing\n");
-			int copy_id = data[parentID].childrenID[0];
-			printf("copy id: %d\n", copy_id);
-			ui_element copy = data[copy_id];
-			buttonID = add_ui_element(uiDatas, copy, parentID);
-			printf("resized\n");
-		}else buttonID = data[parentID].childrenID[i];
-		/*if(data[parentID + 1].childrenCount <= i)
-		{
-			printf("Not enough ui elements (sprites), resizing. childrenCount: %d capacity: %d \n", data[parentID + 1].childrenCount, data[parentID + 1].childrenCapacity);
-			int copy_id = data[parentID + 1].childrenID[0];
-			ui_element copy = data[copy_id];
-			copy.sprite = editing_animation.sprites[i];
-			//int sprite_button = add_ui_element(uiDatas, copy, parentID + 1);
-			printf("resized\n");
-		}*/
-		printf("reassigned: id: %d flags: %d n: %d \n",buttonID,data[buttonID].flags, data[buttonID].number_in_children );
-	}
-
-	*editing_frame_count = editing_animation.frame_count;
-
-	return existingWindowParent;
+	/*
+	1. init events and sprites
+	2. init events
+	*/
+	update_event_buttons_and_sprites(editing_animation);
+	update_frame_attached_events();
 }

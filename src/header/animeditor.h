@@ -16,13 +16,15 @@ int InitEditAnimationWindow(FrameAnimation editingAnimation,
 							int* editing_frame_count, int parentID, ui_element_datas* uiDatas);
                             
 
-int ReInitEditAnimationWindowWithNewAnimation(FrameAnimation editingAnimation, 
-							int* editing_frame_count, int existingWindowParent, ui_element_datas* uiDatas);
-void SwitchEditingAnimationFlag(int id);
+void reinit_animation_editor(FrameAnimation editing_animation);
 
+void SwitchEditingAnimationFlag(int id);
+void init_event_buttons_and_sprites(FrameAnimation editing_animation);
 void change_frame_attached_events(int id);
 void choose_frame_to_edit(int id);
 void init_frame_attached_events();
 void update_frame_attached_events();
+void open_animation_to_edit(int id);
+
 
 #endif
